@@ -36,7 +36,7 @@ export class BookingsService {
       data: {
         startDate: start,
         endDate: end,
-        totalPrice: diffDays * sitter.pricePerDay,
+        totalPrice: diffDays, //* sitter.pricePerDay,
         status: 'PENDING',
         ownerId: ownerId,
         sitterProfileId: dto.sitterProfileId,
