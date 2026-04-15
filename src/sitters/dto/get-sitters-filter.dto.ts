@@ -1,6 +1,7 @@
-import { IsOptional, IsString, IsNumber } from 'class-validator';
+import { IsOptional, IsString, IsNumber, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { PetType, ServiceType } from '@prisma/client';
 
 export class GetSittersFilterDto {
   @ApiPropertyOptional({ description: 'Cidade do cuidador' })
@@ -10,13 +11,13 @@ export class GetSittersFilterDto {
 
   @ApiPropertyOptional({ description: 'Tipo de animal (ex: Cão)' })
   @IsOptional()
-  @IsString()
-  animalType?: string;
+  @IsEnum(PetType)
+  animalType?: PetType;
 
   @ApiPropertyOptional({ description: 'Tipo de serviço (ex: Passeio)' })
   @IsOptional()
-  @IsString()
-  serviceType?: string;
+  @IsEnum(ServiceType)
+  serviceType?: ServiceType;
 
   @ApiPropertyOptional({ description: 'Preço máximo por dia' })
   @IsOptional()

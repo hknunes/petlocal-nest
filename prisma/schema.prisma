@@ -57,9 +57,8 @@ model SitterProfile {
   userId          Int      @unique
   user            User     @relation(fields: [userId], references: [id])
   
-  
-  services        String[] @default([])
-  acceptedAnimals String[] @default([])
+  services        ServiceType[] @default([])
+  acceptedAnimals PetType[] @default([])
   pricePerHour    Float    @default(0)
   radiusKm        Int      @default(0)
   availability    String?  
@@ -71,6 +70,13 @@ model SitterProfile {
   createdAt         DateTime @default(now())
 
   bookings  Booking[]
+}
+
+enum ServiceType {
+  ACCOMODATION
+  HOME_VISIT
+  EXCURSIONS
+  MEALS_AND_HEALTHCARE
 }
 
 enum UserRole {
