@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  email         String         @unique
+  username      String         @unique
+  password      String
+  roles         UserRole[]     @default([OWNER])
+  createdAt     DateTime       @default(now())
+  
+  name          String
+  photo         String?
+  location      String         @default("Not defined")
+  description   String         @default("No description")
+  rating        Float          @default(0.0)
+
+  pets          Pet[]
+  
+  sitterProfile SitterProfile?
+  bookings  Booking[] @relation("OwnerBookings")
+}
+
+model Pet {
+  id                 Int      @id @default(autoincrement())
+  ownerId            Int
+  owner              User     @relation(fields: [ownerId], references: [id])
+  
+  
+  name               String
+  type               String   
+  breed              String?  
+  age                Int?
+  size               String?  
+  specialNeeds       String?  @map("special_needs")
+  behavior           String?
+  observations       String?
+
+  bookings  Booking[]
+}
+
+model SitterProfile {
+  id              Int      @id @default(autoincrement())
+  userId          Int      @unique
+  user            User     @relation(fields: [userId], references: [id])
+  
+  
+  services        String[] @default([])
+  acceptedAnimals String[] @default([])
+  pricePerHour    Float    @default(0)
+  radiusKm        Int      @default(0)
+  availability    String?  
+  experience      String?  
+
+  atSitterHome      Boolean  @default(false) // Aceita em casa do cuidador
+  atOwnerHome       Boolean  @default(false) // Desloca-se a casa do dono
+  
+  createdAt         DateTime @default(now())
+
+  bookings  Booking[]
+}
+
+enum UserRole {
+  OWNER
+  SITTER
+  ADMIN
+}
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+model Booking {
+  id              Int           @id @default(autoincrement())
+  startDate       DateTime
+  endDate         DateTime
+  status          BookingStatus @default(PENDING)
+  totalPrice      Float
+  
+  // Relação com o Dono (User)
+  ownerId         Int
+  owner           User          @relation("OwnerBookings", fields: [ownerId], references: [id])
+  
+  // Relação com o Cuidador (SitterProfile)
+  sitterProfileId Int
+  sitterProfile   SitterProfile @relation(fields: [sitterProfileId], references: [id])
+  
+  // Relação com o Animal (Pet)
+  petId           Int
+  pet             Pet           @relation(fields: [petId], references: [id])
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
