@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNumber, IsEnum, IsOptional } from 'class-validator';
+import { IsString, IsNumber, IsEnum, IsOptional, IsInt } from 'class-validator';
+import { PetType } from '@prisma/client';
 
 export class CreatePetDto {
   @ApiProperty({
@@ -11,8 +12,8 @@ export class CreatePetDto {
   @ApiProperty({
     example: 'dog',
   })
-  @IsString()
-  type: string;
+  @IsEnum(PetType)
+  type: PetType;
 
   @ApiProperty({
     example: 'bulldog',
@@ -45,4 +46,8 @@ export class CreatePetDto {
   @IsString()
   @IsOptional()
   observations?: string;
+
+  @ApiProperty()
+  @IsInt()
+  ownerId: number;
 }
