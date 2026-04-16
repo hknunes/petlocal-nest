@@ -6,11 +6,12 @@ import {
   IsOptional,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { PetType, ServiceType } from '@prisma/client';
 
 export class UpdateSitterDto {
-  @ApiProperty({ example: ['Passeio', 'Alojamento'], isArray: true })
+  @ApiProperty({ example: ['EXCURSIONS', 'ACCOMODATION'], isArray: true })
   @IsArray()
-  services: string[];
+  services: ServiceType[];
 
   @ApiProperty({ example: 15.5 })
   @IsNumber()
@@ -20,9 +21,9 @@ export class UpdateSitterDto {
   @IsNumber()
   radiusKm: number;
 
-  @ApiProperty({ example: ['Cão', 'Gato'] })
+  @ApiProperty({ example: ['DOG', 'CAT'] })
   @IsArray()
-  acceptedAnimals: string[];
+  acceptedAnimals: PetType[];
 
   @ApiProperty({ example: 'Fins de semana' })
   @IsString()
