@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { BookingsService } from './bookings.service';
@@ -28,5 +28,31 @@ export class BookingsController {
     // Se o user tiver role SITTER, vê o que lhe pediram. Se for OWNER, vê o que pediu.
     const role = user.roles.includes('SITTER') ? 'SITTER' : 'OWNER';
     return this.bookingsService.getMyBookings(user.userId, role);
+  }
+
+  @Patch('accept-booking')
+  @ApiOperation({ summary: 'Aceitar um pedido de reserva (Sitter)' })
+  acceptBooking(
+    @CurrentUser() user: ActiveUserInterface,
+    @Body('bookingId') bookingId: number,
+  ) {
+    return this.bookingsService.changeStatus(
+      bookingId,
+      user.userId,
+      'ACCEPTED',
+    );
+  }
+
+  @Patch('reject-booking')
+  @ApiOperation({ summary: 'Rejeitar um pedido de reserva (Sitter)' })
+  rejectBooking(
+    @CurrentUser() user: ActiveUserInterface,
+    @Body('bookingId') bookingId: number,
+  ) {
+    return this.bookingsService.changeStatus(
+      bookingId,
+      user.userId,
+      'REJECTED',
+    );
   }
 }
