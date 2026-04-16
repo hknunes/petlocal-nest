@@ -60,27 +60,17 @@ export class AuthService {
   }
 
   async register(registerDto: RegisterDto) {
-    const existingUser = await this.usersService.findByEmail(registerDto.email);
+
+    let existingUser = await this.usersService.findOne(registerDto.username);
+    if (existingUser) {
+      throw new ConflictException('Este username já está em utilização');
+    }
+
+    existingUser = await this.usersService.findByEmail(registerDto.email);
     if (existingUser) {
       throw new ConflictException('Este email já está em utilização');
     }
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
-
-    /*const user = await this.usersService.create({
-      ...registerDto,
-      password: hashedPassword,
-    });
-
-    if (user.roles)
-      const payload = {
-        sub: user.id,
-        username: user.username,
-        roles: user.role,
-      };
-
-    return {
-      access_token: await this.jwtService.signAsync(payload),
-    };*/
 
     const newUser = await this.prisma.$transaction(async (tx) => {
       const user = await tx.user.create({

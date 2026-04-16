@@ -19,7 +19,7 @@ import { GetSittersFilterDto } from './dto/get-sitters-filter.dto';
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
 @Controller('sitters')
-export class SitterController {
+export class SittersController {
   constructor(private readonly sitterService: SittersService) {}
   @Patch('my-profile')
   updateMyProfile(

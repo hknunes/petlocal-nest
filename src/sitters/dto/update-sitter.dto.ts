@@ -6,7 +6,6 @@ import {
   IsOptional,
   IsEnum
 } from 'class-validator';
-import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { PetType, ServiceType } from '@prisma/client';
 import { DayOfWeek } from 'src/common/enums/day-of-week.enum';
@@ -32,10 +31,7 @@ export class UpdateSitterDto {
   @IsOptional()
   @IsArray()
   @IsEnum(DayOfWeek, { each: true })
-  @Transform(({ value }: { value: DayOfWeek[] }) =>
-    value.reduce((mask, day) => mask | day, 0)
-  )
-  availability?: number; // stored as bitmask after transform
+  availability?: DayOfWeek[];
 
   @ApiProperty({ example: '5 anos a cuidar de cães' })
   @IsString()
