@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe, ExecutionContext } from '@nestjs/common';
+import { INestApplication, ValidationPipe, ExecutionContext, NotFoundException, BadRequestException } from '@nestjs/common';
 import request from 'supertest';
 import { AuthGuard } from '@nestjs/passport';
 import { BookingsController } from './bookings.controller';
@@ -30,7 +30,7 @@ describe('BookingsController (integration)', () => {
       providers: [
         {
           provide: BookingsService,
-          useValue: { create: jest.fn(), getMyBookings: jest.fn() },
+          useValue: { create: jest.fn(), getMyBookings: jest.fn(), changeStatus: jest.fn() },
         },
       ],
     })
@@ -125,6 +125,86 @@ describe('BookingsController (integration)', () => {
         .expect(200);
 
       expect(response.body).toEqual(mockBookings);
+    });
+  });
+
+  describe('PATCH /bookings/accept-booking', () => {
+    beforeEach(() => { activeUser = mockSitter; });
+
+    it('should call changeStatus with the bookingId, sitterId, and ACCEPTED', async () => {
+      jest.spyOn(bookingsService, 'changeStatus').mockResolvedValue({ id: 1 } as any);
+
+      await request(app.getHttpServer())
+        .patch('/bookings/accept-booking')
+        .send({ bookingId: 1 })
+        .expect(200);
+
+      expect(bookingsService.changeStatus).toHaveBeenCalledWith(1, mockSitter.userId, 'ACCEPTED');
+    });
+
+    it('should return 200 with the updated booking', async () => {
+      const updated = { id: 1, status: 'CONFIRMED' };
+      jest.spyOn(bookingsService, 'changeStatus').mockResolvedValue(updated as any);
+
+      const response = await request(app.getHttpServer())
+        .patch('/bookings/accept-booking')
+        .send({ bookingId: 1 })
+        .expect(200);
+
+      expect(response.body).toEqual(updated);
+    });
+
+    it('should return 404 when the booking does not exist', async () => {
+      jest.spyOn(bookingsService, 'changeStatus').mockRejectedValue(
+        new NotFoundException('Reserva não encontrada.'),
+      );
+
+      const response = await request(app.getHttpServer())
+        .patch('/bookings/accept-booking')
+        .send({ bookingId: 999 })
+        .expect(404);
+
+      expect(response.body.message).toBe('Reserva não encontrada.');
+    });
+  });
+
+  describe('PATCH /bookings/reject-booking', () => {
+    beforeEach(() => { activeUser = mockSitter; });
+
+    it('should call changeStatus with the bookingId, sitterId, and REJECTED', async () => {
+      jest.spyOn(bookingsService, 'changeStatus').mockResolvedValue({ id: 1 } as any);
+
+      await request(app.getHttpServer())
+        .patch('/bookings/reject-booking')
+        .send({ bookingId: 1 })
+        .expect(200);
+
+      expect(bookingsService.changeStatus).toHaveBeenCalledWith(1, mockSitter.userId, 'REJECTED');
+    });
+
+    it('should return 200 with the updated booking', async () => {
+      const updated = { id: 1, status: 'CANCELLED' };
+      jest.spyOn(bookingsService, 'changeStatus').mockResolvedValue(updated as any);
+
+      const response = await request(app.getHttpServer())
+        .patch('/bookings/reject-booking')
+        .send({ bookingId: 1 })
+        .expect(200);
+
+      expect(response.body).toEqual(updated);
+    });
+
+    it('should return 400 when the sitter does not own the booking', async () => {
+      jest.spyOn(bookingsService, 'changeStatus').mockRejectedValue(
+        new BadRequestException('Não tem permissão para alterar esta reserva.'),
+      );
+
+      const response = await request(app.getHttpServer())
+        .patch('/bookings/reject-booking')
+        .send({ bookingId: 1 })
+        .expect(400);
+
+      expect(response.body.message).toBe('Não tem permissão para alterar esta reserva.');
     });
   });
 });

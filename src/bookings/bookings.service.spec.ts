@@ -17,7 +17,7 @@ describe('BookingsService', () => {
           useValue: {
             pet: { findFirst: jest.fn() },
             sitterProfile: { findUnique: jest.fn() },
-            booking: { create: jest.fn(), findMany: jest.fn() },
+            booking: { create: jest.fn(), findMany: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
           },
         },
       ],
@@ -138,6 +138,62 @@ describe('BookingsService', () => {
       const result = await service.getMyBookings(1, 'OWNER');
 
       expect(result).toEqual(mockBookings);
+    });
+  });
+
+  describe('changeStatus', () => {
+    const bookingId = 1;
+    const sitterId = 10;
+    const mockBooking = {
+      id: bookingId,
+      status: 'PENDING',
+      sitterProfile: { userId: sitterId },
+    };
+
+    it('should throw NotFoundException when the booking does not exist', async () => {
+      jest.spyOn(prisma.booking, 'findUnique').mockResolvedValue(null);
+
+      await expect(service.changeStatus(bookingId, sitterId, 'COMPLETED')).rejects.toThrow(NotFoundException);
+      expect(prisma.booking.update).not.toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException when the sitter does not own the booking', async () => {
+      jest.spyOn(prisma.booking, 'findUnique').mockResolvedValue({
+        ...mockBooking,
+        sitterProfile: { userId: 99 }, // different sitter
+      } as any);
+
+      await expect(service.changeStatus(bookingId, sitterId, 'COMPLETED')).rejects.toThrow(BadRequestException);
+      expect(prisma.booking.update).not.toHaveBeenCalled();
+    });
+
+    it('should throw BadRequestException when the status is invalid', async () => {
+      jest.spyOn(prisma.booking, 'findUnique').mockResolvedValue(mockBooking as any);
+
+      await expect(service.changeStatus(bookingId, sitterId, 'ACCEPTED' as any)).rejects.toThrow(BadRequestException);
+      expect(prisma.booking.update).not.toHaveBeenCalled();
+    });
+
+    it('should update the booking with the new status', async () => {
+      jest.spyOn(prisma.booking, 'findUnique').mockResolvedValue(mockBooking as any);
+      jest.spyOn(prisma.booking, 'update').mockResolvedValue({ ...mockBooking, status: 'CONFIRMED' } as any);
+
+      await service.changeStatus(bookingId, sitterId, 'CONFIRMED' as any);
+
+      expect(prisma.booking.update).toHaveBeenCalledWith({
+        where: { id: bookingId },
+        data: { status: 'CONFIRMED' },
+      });
+    });
+
+    it('should return the updated booking', async () => {
+      const updatedBooking = { ...mockBooking, status: 'COMPLETED' };
+      jest.spyOn(prisma.booking, 'findUnique').mockResolvedValue(mockBooking as any);
+      jest.spyOn(prisma.booking, 'update').mockResolvedValue(updatedBooking as any);
+
+      const result = await service.changeStatus(bookingId, sitterId, 'COMPLETED');
+
+      expect(result).toEqual(updatedBooking);
     });
   });
 });
