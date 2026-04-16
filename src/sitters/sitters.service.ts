@@ -8,12 +8,18 @@ export class SittersService {
   constructor(private prisma: PrismaService) {}
 
   async updateSitterProfile(userId: number, updateSitterDto: UpdateSitterDto) {
+    const { availability, ...rest } = updateSitterDto;
+    const availabilityMask = availability
+      ? availability.reduce((mask, day) => mask | day, 0)
+      : undefined;
+
     return await this.prisma.sitterProfile.upsert({
       where: { userId: Number(userId) },
-      update: { ...updateSitterDto },
+      update: { ...rest, ...(availabilityMask !== undefined && { availability: availabilityMask }) },
       create: {
         userId: Number(userId),
-        ...updateSitterDto,
+        ...rest,
+        ...(availabilityMask !== undefined && { availability: availabilityMask }),
       },
     });
   }

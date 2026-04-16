@@ -53,23 +53,23 @@ enum PetType {
 }
 
 model SitterProfile {
-  id              Int      @id @default(autoincrement())
-  userId          Int      @unique
-  user            User     @relation(fields: [userId], references: [id])
+  id              Int           @id @default(autoincrement())
+  userId          Int           @unique
+  user            User          @relation(fields: [userId], references: [id])
   
   services        ServiceType[] @default([])
-  acceptedAnimals PetType[] @default([])
-  pricePerHour    Float    @default(0)
-  radiusKm        Int      @default(0)
-  availability    String?  
+  acceptedAnimals PetType[]     @default([])
+  pricePerHour    Float         @default(0)
+  radiusKm        Int           @default(0)
+  availability    Int           @default(0)  // bitmask: Mon=1, Tue=2, Wed=4, Thu=8, Fri=16, Sat=32, Sun=64
   experience      String?  
 
-  atSitterHome      Boolean  @default(false) // Aceita em casa do cuidador
-  atOwnerHome       Boolean  @default(false) // Desloca-se a casa do dono
+  atSitterHome    Boolean       @default(false) // Aceita em casa do cuidador
+  atOwnerHome     Boolean       @default(false) // Desloca-se a casa do dono
   
-  createdAt         DateTime @default(now())
+  createdAt       DateTime      @default(now())
 
-  bookings  Booking[]
+  bookings        Booking[]
 }
 
 enum ServiceType {
