@@ -5,11 +5,11 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
-import { Booking } from '@prisma/client'; // 👈 Importa o tipo gerado pelo Prisma
+import { Booking, BookingStatus } from '@prisma/client';
 
 @Injectable()
 export class BookingsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   // Adicionamos : Promise<Booking> para garantir a segurança do tipo
   async create(ownerId: number, dto: CreateBookingDto): Promise<Booking> {
@@ -64,6 +64,39 @@ export class BookingsService {
       include: {
         sitterProfile: { include: { user: { select: { username: true } } } },
       },
+    });
+  }
+
+  async changeStatus(
+    bookingId: number,
+    sitterId: number,
+    newStatus: BookingStatus,
+  ) {
+
+    const booking = await this.prisma.booking.findUnique({
+      where: {
+        id: bookingId
+      },
+      include: {
+        sitterProfile: true
+      },
+    });
+
+    if (!booking)
+      throw new NotFoundException('Reserva não encontrada.');
+
+    if (booking.sitterProfile.userId !== sitterId)
+      throw new BadRequestException('Não tem permissão para alterar esta reserva.');
+
+    var statusValues = Object.values(BookingStatus);
+
+    if (!statusValues.includes(newStatus)) {
+      throw new BadRequestException('Status inválido.');
+    }
+
+    return this.prisma.booking.update({
+      where: { id: bookingId },
+      data: { status: newStatus },
     });
   }
 }
