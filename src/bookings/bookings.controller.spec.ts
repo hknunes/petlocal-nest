@@ -4,6 +4,7 @@ import request from 'supertest';
 import { AuthGuard } from '@nestjs/passport';
 import { BookingsController } from './bookings.controller';
 import { BookingsService } from './bookings.service';
+import { BookingStatus } from '@prisma/client';
 
 const mockOwner = { userId: 1, username: 'owner', email: 'owner@test.com', roles: ['OWNER'] };
 const mockSitter = { userId: 2, username: 'sitter', email: 'sitter@test.com', roles: ['OWNER', 'SITTER'] };
@@ -128,27 +129,31 @@ describe('BookingsController (integration)', () => {
     });
   });
 
-  describe('PATCH /bookings/accept-booking', () => {
+  describe('PATCH /bookings/accept-booking/:bookingId', () => {
     beforeEach(() => { activeUser = mockSitter; });
 
-    it('should call changeStatus with the bookingId, sitterId, and ACCEPTED', async () => {
+    it('should return 400 when bookingId is not a number', async () => {
+      return request(app.getHttpServer())
+        .patch('/bookings/accept-booking/abc')
+        .expect(400);
+    });
+
+    it('should call changeStatus with the bookingId, sitterId, and CONFIRMED', async () => {
       jest.spyOn(bookingsService, 'changeStatus').mockResolvedValue({ id: 1 } as any);
 
       await request(app.getHttpServer())
-        .patch('/bookings/accept-booking')
-        .send({ bookingId: 1 })
+        .patch('/bookings/accept-booking/1')
         .expect(200);
 
-      expect(bookingsService.changeStatus).toHaveBeenCalledWith(1, mockSitter.userId, 'ACCEPTED');
+      expect(bookingsService.changeStatus).toHaveBeenCalledWith(1, mockSitter.userId, BookingStatus.CONFIRMED);
     });
 
     it('should return 200 with the updated booking', async () => {
-      const updated = { id: 1, status: 'CONFIRMED' };
+      const updated = { id: 1, status: BookingStatus.CONFIRMED };
       jest.spyOn(bookingsService, 'changeStatus').mockResolvedValue(updated as any);
 
       const response = await request(app.getHttpServer())
-        .patch('/bookings/accept-booking')
-        .send({ bookingId: 1 })
+        .patch('/bookings/accept-booking/1')
         .expect(200);
 
       expect(response.body).toEqual(updated);
@@ -160,35 +165,38 @@ describe('BookingsController (integration)', () => {
       );
 
       const response = await request(app.getHttpServer())
-        .patch('/bookings/accept-booking')
-        .send({ bookingId: 999 })
+        .patch('/bookings/accept-booking/999')
         .expect(404);
 
       expect(response.body.message).toBe('Reserva não encontrada.');
     });
   });
 
-  describe('PATCH /bookings/reject-booking', () => {
+  describe('PATCH /bookings/reject-booking/:bookingId', () => {
     beforeEach(() => { activeUser = mockSitter; });
 
-    it('should call changeStatus with the bookingId, sitterId, and REJECTED', async () => {
+    it('should return 400 when bookingId is not a number', async () => {
+      return request(app.getHttpServer())
+        .patch('/bookings/reject-booking/abc')
+        .expect(400);
+    });
+
+    it('should call changeStatus with the bookingId, sitterId, and CANCELLED', async () => {
       jest.spyOn(bookingsService, 'changeStatus').mockResolvedValue({ id: 1 } as any);
 
       await request(app.getHttpServer())
-        .patch('/bookings/reject-booking')
-        .send({ bookingId: 1 })
+        .patch('/bookings/reject-booking/1')
         .expect(200);
 
-      expect(bookingsService.changeStatus).toHaveBeenCalledWith(1, mockSitter.userId, 'REJECTED');
+      expect(bookingsService.changeStatus).toHaveBeenCalledWith(1, mockSitter.userId, BookingStatus.CANCELLED);
     });
 
     it('should return 200 with the updated booking', async () => {
-      const updated = { id: 1, status: 'CANCELLED' };
+      const updated = { id: 1, status: BookingStatus.CANCELLED };
       jest.spyOn(bookingsService, 'changeStatus').mockResolvedValue(updated as any);
 
       const response = await request(app.getHttpServer())
-        .patch('/bookings/reject-booking')
-        .send({ bookingId: 1 })
+        .patch('/bookings/reject-booking/1')
         .expect(200);
 
       expect(response.body).toEqual(updated);
@@ -200,8 +208,7 @@ describe('BookingsController (integration)', () => {
       );
 
       const response = await request(app.getHttpServer())
-        .patch('/bookings/reject-booking')
-        .send({ bookingId: 1 })
+        .patch('/bookings/reject-booking/1')
         .expect(400);
 
       expect(response.body.message).toBe('Não tem permissão para alterar esta reserva.');
