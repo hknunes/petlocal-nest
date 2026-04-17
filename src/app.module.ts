@@ -9,10 +9,14 @@ import { PrismaService } from './prisma/prisma.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { BookingsService } from './bookings/bookings.service';
 import { BookingsModule } from './bookings/bookings.module';
+import { ChatsService } from './chats/chats.service';
+import { ChatsModule } from './chats/chats.module';
+import { MessagesController } from './messages/messages.controller';
+import { MessagesModule } from './messages/messages.module';
 
 @Module({
-  imports: [UsersModule, AuthModule, PetsModule, SittersModule, PrismaModule, BookingsModule],
-  controllers: [AppController],
-  providers: [AppService, PrismaService, BookingsService],
+  imports: [UsersModule, AuthModule, PetsModule, SittersModule, PrismaModule, BookingsModule, ChatsModule, MessagesModule],
+  controllers: [AppController, MessagesController],
+  providers: [AppService, PrismaService, BookingsService, ChatsService],
 })
 export class AppModule {}
