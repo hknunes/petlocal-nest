@@ -9,7 +9,7 @@ import { Booking, BookingStatus } from '@prisma/client';
 
 @Injectable()
 export class BookingsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   // Adicionamos : Promise<Booking> para garantir a segurança do tipo
   async create(ownerId: number, dto: CreateBookingDto): Promise<Booking> {
@@ -70,12 +70,16 @@ export class BookingsService {
   async changeStatus(
     bookingId: number,
     sitterId: number,
-    newStatus: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'COMPLETED',
+    newStatus: BookingStatus,
   ) {
-    // Verificar se a reserva existe e pertence ao cuidador
+
     const booking = await this.prisma.booking.findUnique({
-      where: { id: bookingId },
-      include: { sitterProfile: true },
+      where: {
+        id: bookingId
+      },
+      include: {
+        sitterProfile: true
+      },
     });
 
     if (!booking)
@@ -84,13 +88,15 @@ export class BookingsService {
     if (booking.sitterProfile.userId !== sitterId)
       throw new BadRequestException('Não tem permissão para alterar esta reserva.');
 
-    if (!Object.values(BookingStatus).includes(newStatus as BookingStatus)) {
+    var statusValues = Object.values(BookingStatus);
+
+    if (!statusValues.includes(newStatus)) {
       throw new BadRequestException('Status inválido.');
     }
 
     return this.prisma.booking.update({
       where: { id: bookingId },
-      data: { status: newStatus as BookingStatus },
+      data: { status: newStatus },
     });
   }
 }
