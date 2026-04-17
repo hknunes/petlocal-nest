@@ -1,7 +1,8 @@
-name: Node.js pull request verify
+name: Run Tests
 
 on:
-  pull_request: {}
+  push:
+  pull_request:
 
 jobs:
   verify:
