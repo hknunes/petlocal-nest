@@ -12,7 +12,7 @@ import { MessagesService } from './messages.service';
 @ApiTags('Messages')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
-@Controller('sitters')
+@Controller('messages')
 export class MessagesController {
   constructor(private readonly messagesService: MessagesService) { }
 

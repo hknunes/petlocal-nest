@@ -14,7 +14,7 @@ export class MessagesService {
         receiverId: dto.receiverId,
         chatId: dto.chatId,
         message: dto.message,
-      },
+      }
     });
   }
 

@@ -14,7 +14,7 @@ export class CreateMessageDto {
     @IsInt()
     chatId: number;
 
-    @ApiProperty
-    @IsString({ example: "Hello World!" })
+    @ApiProperty({ example: 'Hello World!' })
+    @IsString()
     message: string;
 }
