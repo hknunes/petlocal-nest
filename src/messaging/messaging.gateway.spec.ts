@@ -74,9 +74,10 @@ describe('MessagingGateway', () => {
     chatsService = module.get<ChatsService>(ChatsService);
     messagesService = module.get<MessagesService>(MessagesService);
 
-    gateway.server = {
+    const mockServer = {
       to: jest.fn().mockReturnValue({ emit: jest.fn() }),
     } as unknown as Server;
+    gateway.server = mockServer;
   });
 
   it('should be defined', () => {
@@ -200,7 +201,8 @@ describe('MessagingGateway', () => {
         .mockResolvedValue(mockMessage as any);
       const roomEmit = jest.fn();
       const toSpy = jest.fn().mockReturnValue({ emit: roomEmit });
-      gateway.server = { to: toSpy } as unknown as Server;
+      const mockServer = { to: toSpy } as unknown as Server;
+      gateway.server = mockServer;
       const socket = createSocket();
 
       await gateway.handleSendMessage(socket as any, {
@@ -228,7 +230,8 @@ describe('MessagingGateway', () => {
         .mockResolvedValue(updated as any);
       const roomEmit = jest.fn();
       const toSpy = jest.fn().mockReturnValue({ emit: roomEmit });
-      gateway.server = { to: toSpy } as unknown as Server;
+      const mockServer = { to: toSpy } as unknown as Server;
+      gateway.server = mockServer;
       const socket = createSocket();
 
       await gateway.handleUpdateMessage(socket as any, {
@@ -267,7 +270,8 @@ describe('MessagingGateway', () => {
         .mockResolvedValue(mockMessage as any);
       const roomEmit = jest.fn();
       const toSpy = jest.fn().mockReturnValue({ emit: roomEmit });
-      gateway.server = { to: toSpy } as unknown as Server;
+      const mockServer = { to: toSpy } as unknown as Server;
+      gateway.server = mockServer;
       const socket = createSocket();
 
       await gateway.handleDeleteMessage(socket as any, {
