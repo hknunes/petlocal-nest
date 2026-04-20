@@ -60,7 +60,6 @@ export class AuthService {
   }
 
   async register(registerDto: RegisterDto) {
-
     let existingUser = await this.usersService.findOne(registerDto.username);
     if (existingUser) {
       throw new ConflictException('Este username já está em utilização');

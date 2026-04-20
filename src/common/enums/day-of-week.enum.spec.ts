@@ -36,13 +36,17 @@ describe('hasDay', () => {
   it('returns true when the day is present in the mask', () => {
     expect(hasDay(DayOfWeek.Monday, DayOfWeek.Monday)).toBe(true);
     expect(hasDay(ALL_DAYS, DayOfWeek.Friday)).toBe(true);
-    expect(hasDay(DayOfWeek.Monday | DayOfWeek.Wednesday, DayOfWeek.Wednesday)).toBe(true);
+    expect(
+      hasDay(DayOfWeek.Monday | DayOfWeek.Wednesday, DayOfWeek.Wednesday),
+    ).toBe(true);
   });
 
   it('returns false when the day is absent from the mask', () => {
     expect(hasDay(0, DayOfWeek.Monday)).toBe(false);
     expect(hasDay(DayOfWeek.Monday, DayOfWeek.Tuesday)).toBe(false);
-    expect(hasDay(DayOfWeek.Wednesday | DayOfWeek.Friday, DayOfWeek.Saturday)).toBe(false);
+    expect(
+      hasDay(DayOfWeek.Wednesday | DayOfWeek.Friday, DayOfWeek.Saturday),
+    ).toBe(false);
   });
 });
 

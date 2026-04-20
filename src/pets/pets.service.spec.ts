@@ -51,14 +51,16 @@ describe('PetsService', () => {
     };
 
     it('should create a pet with the correct data and ownerId', async () => {
-      jest.spyOn(prisma.pet, 'create').mockResolvedValue({ id: 1 } as any);
+      const createSpy = jest
+        .spyOn(prisma.pet, 'create')
+        .mockResolvedValue({ id: 1 } as any);
 
       await service.create(dto, ownerId);
 
-      expect(prisma.pet.create).toHaveBeenCalledWith(
+      expect(createSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({ ...dto, ownerId }),
-          include: expect.any(Object),
+          data: expect.objectContaining({ ...dto, ownerId }) as object,
+          include: expect.any(Object) as object,
         }),
       );
     });
@@ -75,21 +77,25 @@ describe('PetsService', () => {
 
   describe('findAll', () => {
     it('should query all pets when no ownerId is provided', async () => {
-      jest.spyOn(prisma.pet, 'findMany').mockResolvedValue([]);
+      const findManySpy = jest
+        .spyOn(prisma.pet, 'findMany')
+        .mockResolvedValue([]);
 
       await service.findAll();
 
-      expect(prisma.pet.findMany).toHaveBeenCalledWith(
+      expect(findManySpy).toHaveBeenCalledWith(
         expect.objectContaining({ where: {} }),
       );
     });
 
     it('should filter pets by ownerId when provided', async () => {
-      jest.spyOn(prisma.pet, 'findMany').mockResolvedValue([]);
+      const findManySpy = jest
+        .spyOn(prisma.pet, 'findMany')
+        .mockResolvedValue([]);
 
       await service.findAll(1);
 
-      expect(prisma.pet.findMany).toHaveBeenCalledWith(
+      expect(findManySpy).toHaveBeenCalledWith(
         expect.objectContaining({ where: { ownerId: 1 } }),
       );
     });
@@ -121,11 +127,13 @@ describe('PetsService', () => {
     });
 
     it('should query by the correct id', async () => {
-      jest.spyOn(prisma.pet, 'findUnique').mockResolvedValue({ id: 1 } as any);
+      const findUniqueSpy = jest
+        .spyOn(prisma.pet, 'findUnique')
+        .mockResolvedValue({ id: 1 } as any);
 
       await service.findOne(1);
 
-      expect(prisma.pet.findUnique).toHaveBeenCalledWith(
+      expect(findUniqueSpy).toHaveBeenCalledWith(
         expect.objectContaining({ where: { id: 1 } }),
       );
     });
@@ -135,11 +143,13 @@ describe('PetsService', () => {
     const updateDto: UpdatePetDto = { name: 'Max' };
 
     it('should call prisma.pet.update with the correct id and data', async () => {
-      jest.spyOn(prisma.pet, 'update').mockResolvedValue({ id: 1, name: 'Max' } as any);
+      const updateSpy = jest
+        .spyOn(prisma.pet, 'update')
+        .mockResolvedValue({ id: 1, name: 'Max' } as any);
 
       await service.update(1, updateDto);
 
-      expect(prisma.pet.update).toHaveBeenCalledWith({
+      expect(updateSpy).toHaveBeenCalledWith({
         where: { id: 1 },
         data: updateDto,
       });
@@ -162,18 +172,23 @@ describe('PetsService', () => {
 
     it('should throw NotFoundException when the pet does not exist or does not belong to the owner', async () => {
       jest.spyOn(prisma.pet, 'findFirst').mockResolvedValue(null);
+      const deleteSpy = jest.spyOn(prisma.pet, 'delete');
 
-      await expect(service.delete(petId, ownerId)).rejects.toThrow(NotFoundException);
-      expect(prisma.pet.delete).not.toHaveBeenCalled();
+      await expect(service.delete(petId, ownerId)).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(deleteSpy).not.toHaveBeenCalled();
     });
 
     it('should delete the pet when it belongs to the owner', async () => {
       jest.spyOn(prisma.pet, 'findFirst').mockResolvedValue(mockPet as any);
-      jest.spyOn(prisma.pet, 'delete').mockResolvedValue(mockPet as any);
+      const deleteSpy = jest
+        .spyOn(prisma.pet, 'delete')
+        .mockResolvedValue(mockPet as any);
 
       await service.delete(petId, ownerId);
 
-      expect(prisma.pet.delete).toHaveBeenCalledWith({ where: { id: petId } });
+      expect(deleteSpy).toHaveBeenCalledWith({ where: { id: petId } });
     });
 
     it('should return the deleted pet', async () => {
