@@ -1,11 +1,20 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe, ExecutionContext } from '@nestjs/common';
+import {
+  INestApplication,
+  ValidationPipe,
+  ExecutionContext,
+} from '@nestjs/common';
 import request from 'supertest';
 import { AuthGuard } from '@nestjs/passport';
 import { MessagesController } from './messages.controller';
 import { MessagesService } from './messages.service';
 
-const mockUser = { userId: 1, username: 'user', email: 'user@test.com', roles: ['OWNER'] };
+const mockUser = {
+  userId: 1,
+  username: 'user',
+  email: 'user@test.com',
+  roles: ['OWNER'],
+};
 
 class MockJwtGuard extends AuthGuard('jwt') {
   canActivate(context: ExecutionContext) {
@@ -35,7 +44,11 @@ describe('MessagesController (integration)', () => {
 
     app = module.createNestApplication();
     app.useGlobalPipes(
-      new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
     );
     await app.init();
 
@@ -55,7 +68,10 @@ describe('MessagesController (integration)', () => {
     };
 
     it('should return 400 when the body is empty', async () => {
-      return request(app.getHttpServer()).post('/messages').send({}).expect(400);
+      return request(app.getHttpServer())
+        .post('/messages')
+        .send({})
+        .expect(400);
     });
 
     it('should return 400 when senderId is not an integer', async () => {
@@ -75,14 +91,19 @@ describe('MessagesController (integration)', () => {
     it('should call messagesService.create with the dto', async () => {
       jest.spyOn(messagesService, 'create').mockResolvedValue({ id: 1 } as any);
 
-      await request(app.getHttpServer()).post('/messages').send(validDto).expect(201);
+      await request(app.getHttpServer())
+        .post('/messages')
+        .send(validDto)
+        .expect(201);
 
       expect(messagesService.create).toHaveBeenCalledWith(validDto);
     });
 
     it('should return 201 with the created message', async () => {
       const mockMessage = { id: 1, ...validDto };
-      jest.spyOn(messagesService, 'create').mockResolvedValue(mockMessage as any);
+      jest
+        .spyOn(messagesService, 'create')
+        .mockResolvedValue(mockMessage as any);
 
       const response = await request(app.getHttpServer())
         .post('/messages')

@@ -1,11 +1,15 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 
 @Injectable()
 export class MessagesService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateMessageDto) {
     return this.prisma.message.create({
@@ -14,7 +18,7 @@ export class MessagesService {
         receiverId: dto.receiverId,
         chatId: dto.chatId,
         message: dto.message,
-      }
+      },
     });
   }
 
@@ -38,7 +42,9 @@ export class MessagesService {
     if (!message) throw new NotFoundException('Mensagem não encontrada.');
 
     if (message.senderId !== senderId)
-      throw new ForbiddenException('Não tem permissão para editar esta mensagem.');
+      throw new ForbiddenException(
+        'Não tem permissão para editar esta mensagem.',
+      );
 
     return this.prisma.message.update({
       where: { id },
@@ -52,7 +58,9 @@ export class MessagesService {
     if (!message) throw new NotFoundException('Mensagem não encontrada.');
 
     if (message.senderId !== senderId)
-      throw new ForbiddenException('Não tem permissão para apagar esta mensagem.');
+      throw new ForbiddenException(
+        'Não tem permissão para apagar esta mensagem.',
+      );
 
     return this.prisma.message.delete({ where: { id } });
   }

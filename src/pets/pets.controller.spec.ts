@@ -1,12 +1,21 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe, ExecutionContext } from '@nestjs/common';
+import {
+  INestApplication,
+  ValidationPipe,
+  ExecutionContext,
+} from '@nestjs/common';
 import request from 'supertest';
 import { AuthGuard } from '@nestjs/passport';
 import { PetsController } from './pets.controller';
 import { PetsService } from './pets.service';
 import { PetType } from '@prisma/client';
 
-const mockUser = { userId: 1, username: 'owner', email: 'owner@test.com', roles: ['OWNER'] };
+const mockUser = {
+  userId: 1,
+  username: 'owner',
+  email: 'owner@test.com',
+  roles: ['OWNER'],
+};
 
 class MockJwtGuard extends AuthGuard('jwt') {
   canActivate(context: ExecutionContext) {
@@ -36,7 +45,11 @@ describe('PetsController (integration)', () => {
 
     app = module.createNestApplication();
     app.useGlobalPipes(
-      new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
     );
     await app.init();
 
@@ -79,7 +92,10 @@ describe('PetsController (integration)', () => {
     it('should call petsService.create with the dto and authenticated userId', async () => {
       jest.spyOn(petsService, 'create').mockResolvedValue({ id: 1 } as any);
 
-      await request(app.getHttpServer()).post('/pets').send(validDto).expect(201);
+      await request(app.getHttpServer())
+        .post('/pets')
+        .send(validDto)
+        .expect(201);
 
       expect(petsService.create).toHaveBeenCalledWith(
         expect.objectContaining({ name: validDto.name }),
@@ -122,10 +138,15 @@ describe('PetsController (integration)', () => {
     });
 
     it('should return 200 with the list of pets', async () => {
-      const mockPets = [{ id: 1, name: 'Rex' }, { id: 2, name: 'Max' }];
+      const mockPets = [
+        { id: 1, name: 'Rex' },
+        { id: 2, name: 'Max' },
+      ];
       jest.spyOn(petsService, 'findAll').mockResolvedValue(mockPets as any);
 
-      const response = await request(app.getHttpServer()).get('/pets').expect(200);
+      const response = await request(app.getHttpServer())
+        .get('/pets')
+        .expect(200);
 
       expect(response.body).toEqual(mockPets);
     });

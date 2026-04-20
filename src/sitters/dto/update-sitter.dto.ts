@@ -4,7 +4,7 @@ import {
   IsNumber,
   IsBoolean,
   IsOptional,
-  IsEnum
+  IsEnum,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { PetType, ServiceType } from '@prisma/client';
@@ -27,7 +27,10 @@ export class UpdateSitterDto {
   @IsArray()
   acceptedAnimals: PetType[];
 
-  @ApiProperty({ example: [1, 2, 4], description: 'Array de dias da semana (1=Segunda, 2=Terça, 4=Quarta, etc.)' })
+  @ApiProperty({
+    example: [1, 2, 4],
+    description: 'Array de dias da semana (1=Segunda, 2=Terça, 4=Quarta, etc.)',
+  })
   @IsOptional()
   @IsArray()
   @IsEnum(DayOfWeek, { each: true })

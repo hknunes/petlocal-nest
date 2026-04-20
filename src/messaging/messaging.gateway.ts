@@ -20,7 +20,9 @@ interface AuthenticatedSocket extends Socket {
 }
 
 @WebSocketGateway({ cors: { origin: '*' } })
-export class MessagingGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class MessagingGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server: Server;
 
@@ -76,7 +78,8 @@ export class MessagingGateway implements OnGatewayConnection, OnGatewayDisconnec
   @SubscribeMessage('send_message')
   async handleSendMessage(
     @ConnectedSocket() socket: AuthenticatedSocket,
-    @MessageBody() payload: { chatId: number; receiverId: number; message: string },
+    @MessageBody()
+    payload: { chatId: number; receiverId: number; message: string },
   ) {
     const saved = await this.messagesService.create({
       senderId: socket.userId,
@@ -92,7 +95,8 @@ export class MessagingGateway implements OnGatewayConnection, OnGatewayDisconnec
   @SubscribeMessage('update_message')
   async handleUpdateMessage(
     @ConnectedSocket() socket: AuthenticatedSocket,
-    @MessageBody() payload: { messageId: number; chatId: number; message: string },
+    @MessageBody()
+    payload: { messageId: number; chatId: number; message: string },
   ) {
     const updated = await this.messagesService.update(
       payload.messageId,

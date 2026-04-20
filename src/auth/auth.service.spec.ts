@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConflictException, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 
@@ -71,7 +75,9 @@ describe('AuthService', () => {
     it('should throw UnauthorizedException when the user does not exist', async () => {
       jest.spyOn(usersService, 'findOne').mockResolvedValue(null);
 
-      await expect(service.login('unknown', 'pass')).rejects.toThrow(UnauthorizedException);
+      await expect(service.login('unknown', 'pass')).rejects.toThrow(
+        UnauthorizedException,
+      );
       expect(jwtService.signAsync).not.toHaveBeenCalled();
     });
 
@@ -79,7 +85,9 @@ describe('AuthService', () => {
       jest.spyOn(usersService, 'findOne').mockResolvedValue(mockUser as any);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
-      await expect(service.login('testuser', 'wrong_pass')).rejects.toThrow(UnauthorizedException);
+      await expect(service.login('testuser', 'wrong_pass')).rejects.toThrow(
+        UnauthorizedException,
+      );
       expect(jwtService.signAsync).not.toHaveBeenCalled();
     });
 
@@ -116,7 +124,9 @@ describe('AuthService', () => {
 
     it('should throw ConflictException when the email is already taken', async () => {
       jest.spyOn(usersService, 'findOne').mockResolvedValue(null);
-      jest.spyOn(usersService, 'findByEmail').mockResolvedValue(mockUser as any);
+      jest
+        .spyOn(usersService, 'findByEmail')
+        .mockResolvedValue(mockUser as any);
 
       await expect(service.register(dto)).rejects.toThrow(ConflictException);
       expect(prisma.$transaction).not.toHaveBeenCalled();
@@ -153,10 +163,16 @@ describe('AuthService', () => {
       jest.spyOn(usersService, 'findByEmail').mockResolvedValue(null);
 
       const txMock = {
-        user: { create: jest.fn().mockResolvedValue({ ...mockUser, roles: [UserRole.SITTER] }) },
+        user: {
+          create: jest
+            .fn()
+            .mockResolvedValue({ ...mockUser, roles: [UserRole.SITTER] }),
+        },
         sitterProfile: { create: jest.fn().mockResolvedValue({}) },
       };
-      jest.spyOn(prisma, '$transaction').mockImplementation((cb: any) => cb(txMock));
+      jest
+        .spyOn(prisma, '$transaction')
+        .mockImplementation((cb: any) => cb(txMock));
 
       await service.register(sitterDto);
 
@@ -175,7 +191,9 @@ describe('AuthService', () => {
         user: { create: jest.fn().mockResolvedValue(mockUser) },
         sitterProfile: { create: jest.fn() },
       };
-      jest.spyOn(prisma, '$transaction').mockImplementation((cb: any) => cb(txMock));
+      jest
+        .spyOn(prisma, '$transaction')
+        .mockImplementation((cb: any) => cb(txMock));
 
       await service.register(dto);
 
@@ -187,12 +205,16 @@ describe('AuthService', () => {
     it('should throw NotFoundException when the email does not exist', async () => {
       jest.spyOn(usersService, 'findByEmail').mockResolvedValue(null);
 
-      await expect(service.forgotPassword('unknown@mail.com')).rejects.toThrow(NotFoundException);
+      await expect(service.forgotPassword('unknown@mail.com')).rejects.toThrow(
+        NotFoundException,
+      );
       expect(jwtService.signAsync).not.toHaveBeenCalled();
     });
 
     it('should generate a reset token with type "reset" and 15m expiry', async () => {
-      jest.spyOn(usersService, 'findByEmail').mockResolvedValue(mockUser as any);
+      jest
+        .spyOn(usersService, 'findByEmail')
+        .mockResolvedValue(mockUser as any);
 
       await service.forgotPassword('test@mail.com');
 
@@ -203,30 +225,44 @@ describe('AuthService', () => {
     });
 
     it('should return a success message', async () => {
-      jest.spyOn(usersService, 'findByEmail').mockResolvedValue(mockUser as any);
+      jest
+        .spyOn(usersService, 'findByEmail')
+        .mockResolvedValue(mockUser as any);
 
       const result = await service.forgotPassword('test@mail.com');
 
-      expect(result).toEqual({ message: 'Se o email existir, um link de recuperação foi enviado.' });
+      expect(result).toEqual({
+        message: 'Se o email existir, um link de recuperação foi enviado.',
+      });
     });
   });
 
   describe('resetPassword', () => {
     it('should throw UnauthorizedException when the token is invalid', async () => {
-      jest.spyOn(jwtService, 'verifyAsync').mockRejectedValue(new Error('invalid token'));
+      jest
+        .spyOn(jwtService, 'verifyAsync')
+        .mockRejectedValue(new Error('invalid token'));
 
-      await expect(service.resetPassword('bad_token', 'newpass')).rejects.toThrow(UnauthorizedException);
+      await expect(
+        service.resetPassword('bad_token', 'newpass'),
+      ).rejects.toThrow(UnauthorizedException);
     });
 
     it('should throw UnauthorizedException when the token type is not "reset"', async () => {
-      jest.spyOn(jwtService, 'verifyAsync').mockResolvedValue({ sub: 1, type: 'access' } as any);
+      jest
+        .spyOn(jwtService, 'verifyAsync')
+        .mockResolvedValue({ sub: 1, type: 'access' } as any);
 
-      await expect(service.resetPassword('wrong_type_token', 'newpass')).rejects.toThrow(UnauthorizedException);
+      await expect(
+        service.resetPassword('wrong_type_token', 'newpass'),
+      ).rejects.toThrow(UnauthorizedException);
       expect(usersService.update).not.toHaveBeenCalled();
     });
 
     it('should update the password when the token is valid', async () => {
-      jest.spyOn(jwtService, 'verifyAsync').mockResolvedValue({ sub: mockUser.id, type: 'reset' } as any);
+      jest
+        .spyOn(jwtService, 'verifyAsync')
+        .mockResolvedValue({ sub: mockUser.id, type: 'reset' } as any);
       jest.spyOn(usersService, 'update').mockResolvedValue(mockUser as any);
 
       await service.resetPassword('valid_token', 'newpass123');
@@ -238,7 +274,9 @@ describe('AuthService', () => {
     });
 
     it('should return a success message after password reset', async () => {
-      jest.spyOn(jwtService, 'verifyAsync').mockResolvedValue({ sub: mockUser.id, type: 'reset' } as any);
+      jest
+        .spyOn(jwtService, 'verifyAsync')
+        .mockResolvedValue({ sub: mockUser.id, type: 'reset' } as any);
       jest.spyOn(usersService, 'update').mockResolvedValue(mockUser as any);
 
       const result = await service.resetPassword('valid_token', 'newpass123');

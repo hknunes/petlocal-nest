@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { ChatsService } from './chats.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateChatDto } from './dto/create-chat.dto';
@@ -41,7 +45,9 @@ describe('ChatsService', () => {
     const mockChat = { id: 1, senderId, receiverId: dto.receiverId };
 
     it('should throw BadRequestException when sender and receiver are the same user', async () => {
-      await expect(service.create(1, { receiverId: 1 })).rejects.toThrow(BadRequestException);
+      await expect(service.create(1, { receiverId: 1 })).rejects.toThrow(
+        BadRequestException,
+      );
       expect(prisma.chat.findFirst).not.toHaveBeenCalled();
     });
 
@@ -132,13 +138,19 @@ describe('ChatsService', () => {
     it('should throw NotFoundException when the chat does not exist', async () => {
       jest.spyOn(prisma.chat, 'findUnique').mockResolvedValue(null);
 
-      await expect(service.update(99, userId)).rejects.toThrow(NotFoundException);
+      await expect(service.update(99, userId)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw ForbiddenException when the user is not a participant', async () => {
-      jest.spyOn(prisma.chat, 'findUnique').mockResolvedValue({ ...mockChat, senderId: 5, receiverId: 6 } as any);
+      jest
+        .spyOn(prisma.chat, 'findUnique')
+        .mockResolvedValue({ ...mockChat, senderId: 5, receiverId: 6 } as any);
 
-      await expect(service.update(1, userId)).rejects.toThrow(ForbiddenException);
+      await expect(service.update(1, userId)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should return the chat when the user is the sender', async () => {
@@ -165,14 +177,20 @@ describe('ChatsService', () => {
     it('should throw NotFoundException when the chat does not exist', async () => {
       jest.spyOn(prisma.chat, 'findUnique').mockResolvedValue(null);
 
-      await expect(service.delete(99, userId)).rejects.toThrow(NotFoundException);
+      await expect(service.delete(99, userId)).rejects.toThrow(
+        NotFoundException,
+      );
       expect(prisma.chat.delete).not.toHaveBeenCalled();
     });
 
     it('should throw ForbiddenException when the user is not a participant', async () => {
-      jest.spyOn(prisma.chat, 'findUnique').mockResolvedValue({ ...mockChat, senderId: 5, receiverId: 6 } as any);
+      jest
+        .spyOn(prisma.chat, 'findUnique')
+        .mockResolvedValue({ ...mockChat, senderId: 5, receiverId: 6 } as any);
 
-      await expect(service.delete(1, userId)).rejects.toThrow(ForbiddenException);
+      await expect(service.delete(1, userId)).rejects.toThrow(
+        ForbiddenException,
+      );
       expect(prisma.chat.delete).not.toHaveBeenCalled();
     });
 

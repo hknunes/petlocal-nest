@@ -15,11 +15,18 @@ export class SittersService {
 
     return await this.prisma.sitterProfile.upsert({
       where: { userId: Number(userId) },
-      update: { ...rest, ...(availabilityMask !== undefined && { availability: availabilityMask }) },
+      update: {
+        ...rest,
+        ...(availabilityMask !== undefined && {
+          availability: availabilityMask,
+        }),
+      },
       create: {
         userId: Number(userId),
         ...rest,
-        ...(availabilityMask !== undefined && { availability: availabilityMask }),
+        ...(availabilityMask !== undefined && {
+          availability: availabilityMask,
+        }),
       },
     });
   }

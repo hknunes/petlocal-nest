@@ -1,13 +1,29 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe, ExecutionContext, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  INestApplication,
+  ValidationPipe,
+  ExecutionContext,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import request from 'supertest';
 import { AuthGuard } from '@nestjs/passport';
 import { BookingsController } from './bookings.controller';
 import { BookingsService } from './bookings.service';
 import { BookingStatus } from '@prisma/client';
 
-const mockOwner = { userId: 1, username: 'owner', email: 'owner@test.com', roles: ['OWNER'] };
-const mockSitter = { userId: 2, username: 'sitter', email: 'sitter@test.com', roles: ['OWNER', 'SITTER'] };
+const mockOwner = {
+  userId: 1,
+  username: 'owner',
+  email: 'owner@test.com',
+  roles: ['OWNER'],
+};
+const mockSitter = {
+  userId: 2,
+  username: 'sitter',
+  email: 'sitter@test.com',
+  roles: ['OWNER', 'SITTER'],
+};
 
 let activeUser = mockOwner;
 
@@ -31,7 +47,11 @@ describe('BookingsController (integration)', () => {
       providers: [
         {
           provide: BookingsService,
-          useValue: { create: jest.fn(), getMyBookings: jest.fn(), changeStatus: jest.fn() },
+          useValue: {
+            create: jest.fn(),
+            getMyBookings: jest.fn(),
+            changeStatus: jest.fn(),
+          },
         },
       ],
     })
@@ -41,7 +61,11 @@ describe('BookingsController (integration)', () => {
 
     app = module.createNestApplication();
     app.useGlobalPipes(
-      new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
     );
     await app.init();
 
@@ -61,7 +85,10 @@ describe('BookingsController (integration)', () => {
     };
 
     it('should return 400 when the body is empty', async () => {
-      return request(app.getHttpServer()).post('/bookings').send({}).expect(400);
+      return request(app.getHttpServer())
+        .post('/bookings')
+        .send({})
+        .expect(400);
     });
 
     it('should return 400 when petId is not an integer', async () => {
@@ -81,14 +108,22 @@ describe('BookingsController (integration)', () => {
     it('should call bookingsService.create with the authenticated userId and dto', async () => {
       jest.spyOn(bookingsService, 'create').mockResolvedValue({ id: 1 } as any);
 
-      await request(app.getHttpServer()).post('/bookings').send(validDto).expect(201);
+      await request(app.getHttpServer())
+        .post('/bookings')
+        .send(validDto)
+        .expect(201);
 
-      expect(bookingsService.create).toHaveBeenCalledWith(mockOwner.userId, validDto);
+      expect(bookingsService.create).toHaveBeenCalledWith(
+        mockOwner.userId,
+        validDto,
+      );
     });
 
     it('should return 201 with the created booking', async () => {
       const mockBooking = { id: 1, status: 'PENDING', totalPrice: 2 };
-      jest.spyOn(bookingsService, 'create').mockResolvedValue(mockBooking as any);
+      jest
+        .spyOn(bookingsService, 'create')
+        .mockResolvedValue(mockBooking as any);
 
       const response = await request(app.getHttpServer())
         .post('/bookings')
@@ -103,23 +138,35 @@ describe('BookingsController (integration)', () => {
     it('should call getMyBookings with OWNER role for a user without SITTER role', async () => {
       jest.spyOn(bookingsService, 'getMyBookings').mockResolvedValue([]);
 
-      await request(app.getHttpServer()).get('/bookings/my-requests').expect(200);
+      await request(app.getHttpServer())
+        .get('/bookings/my-requests')
+        .expect(200);
 
-      expect(bookingsService.getMyBookings).toHaveBeenCalledWith(mockOwner.userId, 'OWNER');
+      expect(bookingsService.getMyBookings).toHaveBeenCalledWith(
+        mockOwner.userId,
+        'OWNER',
+      );
     });
 
     it('should call getMyBookings with SITTER role for a user with SITTER role', async () => {
       activeUser = mockSitter;
       jest.spyOn(bookingsService, 'getMyBookings').mockResolvedValue([]);
 
-      await request(app.getHttpServer()).get('/bookings/my-requests').expect(200);
+      await request(app.getHttpServer())
+        .get('/bookings/my-requests')
+        .expect(200);
 
-      expect(bookingsService.getMyBookings).toHaveBeenCalledWith(mockSitter.userId, 'SITTER');
+      expect(bookingsService.getMyBookings).toHaveBeenCalledWith(
+        mockSitter.userId,
+        'SITTER',
+      );
     });
 
     it('should return 200 with the bookings list', async () => {
       const mockBookings = [{ id: 1 }, { id: 2 }];
-      jest.spyOn(bookingsService, 'getMyBookings').mockResolvedValue(mockBookings as any);
+      jest
+        .spyOn(bookingsService, 'getMyBookings')
+        .mockResolvedValue(mockBookings as any);
 
       const response = await request(app.getHttpServer())
         .get('/bookings/my-requests')
@@ -130,7 +177,9 @@ describe('BookingsController (integration)', () => {
   });
 
   describe('PATCH /bookings/accept-booking/:bookingId', () => {
-    beforeEach(() => { activeUser = mockSitter; });
+    beforeEach(() => {
+      activeUser = mockSitter;
+    });
 
     it('should return 400 when bookingId is not a number', async () => {
       return request(app.getHttpServer())
@@ -139,18 +188,26 @@ describe('BookingsController (integration)', () => {
     });
 
     it('should call changeStatus with the bookingId, sitterId, and CONFIRMED', async () => {
-      jest.spyOn(bookingsService, 'changeStatus').mockResolvedValue({ id: 1 } as any);
+      jest
+        .spyOn(bookingsService, 'changeStatus')
+        .mockResolvedValue({ id: 1 } as any);
 
       await request(app.getHttpServer())
         .patch('/bookings/accept-booking/1')
         .expect(200);
 
-      expect(bookingsService.changeStatus).toHaveBeenCalledWith(1, mockSitter.userId, BookingStatus.CONFIRMED);
+      expect(bookingsService.changeStatus).toHaveBeenCalledWith(
+        1,
+        mockSitter.userId,
+        BookingStatus.CONFIRMED,
+      );
     });
 
     it('should return 200 with the updated booking', async () => {
       const updated = { id: 1, status: BookingStatus.CONFIRMED };
-      jest.spyOn(bookingsService, 'changeStatus').mockResolvedValue(updated as any);
+      jest
+        .spyOn(bookingsService, 'changeStatus')
+        .mockResolvedValue(updated as any);
 
       const response = await request(app.getHttpServer())
         .patch('/bookings/accept-booking/1')
@@ -160,9 +217,9 @@ describe('BookingsController (integration)', () => {
     });
 
     it('should return 404 when the booking does not exist', async () => {
-      jest.spyOn(bookingsService, 'changeStatus').mockRejectedValue(
-        new NotFoundException('Reserva não encontrada.'),
-      );
+      jest
+        .spyOn(bookingsService, 'changeStatus')
+        .mockRejectedValue(new NotFoundException('Reserva não encontrada.'));
 
       const response = await request(app.getHttpServer())
         .patch('/bookings/accept-booking/999')
@@ -173,7 +230,9 @@ describe('BookingsController (integration)', () => {
   });
 
   describe('PATCH /bookings/reject-booking/:bookingId', () => {
-    beforeEach(() => { activeUser = mockSitter; });
+    beforeEach(() => {
+      activeUser = mockSitter;
+    });
 
     it('should return 400 when bookingId is not a number', async () => {
       return request(app.getHttpServer())
@@ -182,18 +241,26 @@ describe('BookingsController (integration)', () => {
     });
 
     it('should call changeStatus with the bookingId, sitterId, and CANCELLED', async () => {
-      jest.spyOn(bookingsService, 'changeStatus').mockResolvedValue({ id: 1 } as any);
+      jest
+        .spyOn(bookingsService, 'changeStatus')
+        .mockResolvedValue({ id: 1 } as any);
 
       await request(app.getHttpServer())
         .patch('/bookings/reject-booking/1')
         .expect(200);
 
-      expect(bookingsService.changeStatus).toHaveBeenCalledWith(1, mockSitter.userId, BookingStatus.CANCELLED);
+      expect(bookingsService.changeStatus).toHaveBeenCalledWith(
+        1,
+        mockSitter.userId,
+        BookingStatus.CANCELLED,
+      );
     });
 
     it('should return 200 with the updated booking', async () => {
       const updated = { id: 1, status: BookingStatus.CANCELLED };
-      jest.spyOn(bookingsService, 'changeStatus').mockResolvedValue(updated as any);
+      jest
+        .spyOn(bookingsService, 'changeStatus')
+        .mockResolvedValue(updated as any);
 
       const response = await request(app.getHttpServer())
         .patch('/bookings/reject-booking/1')
@@ -203,15 +270,21 @@ describe('BookingsController (integration)', () => {
     });
 
     it('should return 400 when the sitter does not own the booking', async () => {
-      jest.spyOn(bookingsService, 'changeStatus').mockRejectedValue(
-        new BadRequestException('Não tem permissão para alterar esta reserva.'),
-      );
+      jest
+        .spyOn(bookingsService, 'changeStatus')
+        .mockRejectedValue(
+          new BadRequestException(
+            'Não tem permissão para alterar esta reserva.',
+          ),
+        );
 
       const response = await request(app.getHttpServer())
         .patch('/bookings/reject-booking/1')
         .expect(400);
 
-      expect(response.body.message).toBe('Não tem permissão para alterar esta reserva.');
+      expect(response.body.message).toBe(
+        'Não tem permissão para alterar esta reserva.',
+      );
     });
   });
 });

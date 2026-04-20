@@ -1,11 +1,21 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe, ExecutionContext, BadRequestException } from '@nestjs/common';
+import {
+  INestApplication,
+  ValidationPipe,
+  ExecutionContext,
+  BadRequestException,
+} from '@nestjs/common';
 import request from 'supertest';
 import { AuthGuard } from '@nestjs/passport';
 import { ChatsController } from './chats.controller';
 import { ChatsService } from './chats.service';
 
-const mockUser = { userId: 1, username: 'user', email: 'user@test.com', roles: ['OWNER'] };
+const mockUser = {
+  userId: 1,
+  username: 'user',
+  email: 'user@test.com',
+  roles: ['OWNER'],
+};
 
 class MockJwtGuard extends AuthGuard('jwt') {
   canActivate(context: ExecutionContext) {
@@ -35,7 +45,11 @@ describe('ChatsController (integration)', () => {
 
     app = module.createNestApplication();
     app.useGlobalPipes(
-      new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
     );
     await app.init();
 
@@ -62,9 +76,14 @@ describe('ChatsController (integration)', () => {
       const mockChat = { id: 1, senderId: mockUser.userId, receiverId: 2 };
       jest.spyOn(chatsService, 'create').mockResolvedValue(mockChat as any);
 
-      await request(app.getHttpServer()).post('/chats').send({ receiverId: 2 }).expect(201);
+      await request(app.getHttpServer())
+        .post('/chats')
+        .send({ receiverId: 2 })
+        .expect(201);
 
-      expect(chatsService.create).toHaveBeenCalledWith(mockUser.userId, { receiverId: 2 });
+      expect(chatsService.create).toHaveBeenCalledWith(mockUser.userId, {
+        receiverId: 2,
+      });
     });
 
     it('should return 201 with the created chat', async () => {
@@ -80,16 +99,20 @@ describe('ChatsController (integration)', () => {
     });
 
     it('should return 400 when trying to create a chat with yourself', async () => {
-      jest.spyOn(chatsService, 'create').mockRejectedValue(
-        new BadRequestException('Não pode criar um chat consigo mesmo.'),
-      );
+      jest
+        .spyOn(chatsService, 'create')
+        .mockRejectedValue(
+          new BadRequestException('Não pode criar um chat consigo mesmo.'),
+        );
 
       const response = await request(app.getHttpServer())
         .post('/chats')
         .send({ receiverId: mockUser.userId })
         .expect(400);
 
-      expect(response.body.message).toBe('Não pode criar um chat consigo mesmo.');
+      expect(response.body.message).toBe(
+        'Não pode criar um chat consigo mesmo.',
+      );
     });
 
     it('should return 200 with the existing chat when one already exists', async () => {

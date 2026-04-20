@@ -49,8 +49,16 @@ describe('SittersController', () => {
 
     it('should return the list of sitters returned by the service', async () => {
       const mockSitters = [
-        { id: 1, pricePerHour: 15, user: { username: 'john', location: 'Porto', photo: null } },
-        { id: 2, pricePerHour: 25, user: { username: 'jane', location: 'Lisboa', photo: null } },
+        {
+          id: 1,
+          pricePerHour: 15,
+          user: { username: 'john', location: 'Porto', photo: null },
+        },
+        {
+          id: 2,
+          pricePerHour: 25,
+          user: { username: 'jane', location: 'Lisboa', photo: null },
+        },
       ];
       jest.spyOn(service, 'findAll').mockResolvedValue(mockSitters as any);
 

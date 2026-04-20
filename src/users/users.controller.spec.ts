@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe, NotFoundException } from '@nestjs/common';
+import {
+  INestApplication,
+  ValidationPipe,
+  NotFoundException,
+} from '@nestjs/common';
 import request from 'supertest';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
@@ -36,7 +40,11 @@ describe('UsersController (integration)', () => {
 
     app = module.createNestApplication();
     app.useGlobalPipes(
-      new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
     );
     await app.init();
 
@@ -59,7 +67,9 @@ describe('UsersController (integration)', () => {
     it('should call findAll with the role query param', async () => {
       jest.spyOn(usersService, 'findAll').mockResolvedValue([mockUser] as any);
 
-      await request(app.getHttpServer()).get(`/users?role=${UserRole.OWNER}`).expect(200);
+      await request(app.getHttpServer())
+        .get(`/users?role=${UserRole.OWNER}`)
+        .expect(200);
 
       expect(usersService.findAll).toHaveBeenCalledWith(UserRole.OWNER);
     });
@@ -67,17 +77,25 @@ describe('UsersController (integration)', () => {
     it('should return 200 with the list of users', async () => {
       jest.spyOn(usersService, 'findAll').mockResolvedValue([mockUser] as any);
 
-      const response = await request(app.getHttpServer()).get('/users').expect(200);
+      const response = await request(app.getHttpServer())
+        .get('/users')
+        .expect(200);
 
       expect(response.body).toEqual([mockUser]);
     });
 
     it('should return 404 when no users with the given role exist', async () => {
-      jest.spyOn(usersService, 'findAll').mockRejectedValue(
-        new NotFoundException(`Nenhum utilizador com a role '${UserRole.SITTER}' encontrado.`),
-      );
+      jest
+        .spyOn(usersService, 'findAll')
+        .mockRejectedValue(
+          new NotFoundException(
+            `Nenhum utilizador com a role '${UserRole.SITTER}' encontrado.`,
+          ),
+        );
 
-      return request(app.getHttpServer()).get(`/users?role=${UserRole.SITTER}`).expect(404);
+      return request(app.getHttpServer())
+        .get(`/users?role=${UserRole.SITTER}`)
+        .expect(404);
     });
   });
 
@@ -87,7 +105,9 @@ describe('UsersController (integration)', () => {
     });
 
     it('should call findOneById with the parsed id', async () => {
-      jest.spyOn(usersService, 'findOneById').mockResolvedValue(mockUser as any);
+      jest
+        .spyOn(usersService, 'findOneById')
+        .mockResolvedValue(mockUser as any);
 
       await request(app.getHttpServer()).get('/users/1').expect(200);
 
@@ -95,17 +115,21 @@ describe('UsersController (integration)', () => {
     });
 
     it('should return 200 with the user', async () => {
-      jest.spyOn(usersService, 'findOneById').mockResolvedValue(mockUser as any);
+      jest
+        .spyOn(usersService, 'findOneById')
+        .mockResolvedValue(mockUser as any);
 
-      const response = await request(app.getHttpServer()).get('/users/1').expect(200);
+      const response = await request(app.getHttpServer())
+        .get('/users/1')
+        .expect(200);
 
       expect(response.body).toEqual(mockUser);
     });
 
     it('should return 404 when the user does not exist', async () => {
-      jest.spyOn(usersService, 'findOneById').mockRejectedValue(
-        new NotFoundException('Utilizador não encontrado.'),
-      );
+      jest
+        .spyOn(usersService, 'findOneById')
+        .mockRejectedValue(new NotFoundException('Utilizador não encontrado.'));
 
       return request(app.getHttpServer()).get('/users/99').expect(404);
     });
@@ -141,9 +165,14 @@ describe('UsersController (integration)', () => {
     it('should call usersService.create with the dto', async () => {
       jest.spyOn(usersService, 'create').mockResolvedValue(mockUser as any);
 
-      await request(app.getHttpServer()).post('/users').send(validDto).expect(201);
+      await request(app.getHttpServer())
+        .post('/users')
+        .send(validDto)
+        .expect(201);
 
-      expect(usersService.create).toHaveBeenCalledWith(expect.objectContaining({ username: validDto.username }));
+      expect(usersService.create).toHaveBeenCalledWith(
+        expect.objectContaining({ username: validDto.username }),
+      );
     });
 
     it('should return 201 with the created user', async () => {
@@ -160,15 +189,24 @@ describe('UsersController (integration)', () => {
 
   describe('PATCH /users/:id', () => {
     it('should return 400 when id is not a number', async () => {
-      return request(app.getHttpServer()).patch('/users/abc').send({ name: 'New Name' }).expect(400);
+      return request(app.getHttpServer())
+        .patch('/users/abc')
+        .send({ name: 'New Name' })
+        .expect(400);
     });
 
     it('should call usersService.update with the parsed id and dto', async () => {
       jest.spyOn(usersService, 'update').mockResolvedValue(mockUser as any);
 
-      await request(app.getHttpServer()).patch('/users/1').send({ name: 'New Name' }).expect(200);
+      await request(app.getHttpServer())
+        .patch('/users/1')
+        .send({ name: 'New Name' })
+        .expect(200);
 
-      expect(usersService.update).toHaveBeenCalledWith(1, expect.objectContaining({ name: 'New Name' }));
+      expect(usersService.update).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({ name: 'New Name' }),
+      );
     });
 
     it('should return 200 with the updated user', async () => {
@@ -184,11 +222,16 @@ describe('UsersController (integration)', () => {
     });
 
     it('should return 404 when the user does not exist', async () => {
-      jest.spyOn(usersService, 'update').mockRejectedValue(
-        new NotFoundException('Utilizador com ID 99 não encontrado.'),
-      );
+      jest
+        .spyOn(usersService, 'update')
+        .mockRejectedValue(
+          new NotFoundException('Utilizador com ID 99 não encontrado.'),
+        );
 
-      return request(app.getHttpServer()).patch('/users/99').send({ name: 'New Name' }).expect(404);
+      return request(app.getHttpServer())
+        .patch('/users/99')
+        .send({ name: 'New Name' })
+        .expect(404);
     });
   });
 
@@ -208,15 +251,19 @@ describe('UsersController (integration)', () => {
     it('should return 200 with the deleted user', async () => {
       jest.spyOn(usersService, 'delete').mockResolvedValue(mockUser as any);
 
-      const response = await request(app.getHttpServer()).delete('/users/1').expect(200);
+      const response = await request(app.getHttpServer())
+        .delete('/users/1')
+        .expect(200);
 
       expect(response.body).toEqual(mockUser);
     });
 
     it('should return 404 when the user does not exist', async () => {
-      jest.spyOn(usersService, 'delete').mockRejectedValue(
-        new NotFoundException('Não foi possível eliminar: ID 99 não existe.'),
-      );
+      jest
+        .spyOn(usersService, 'delete')
+        .mockRejectedValue(
+          new NotFoundException('Não foi possível eliminar: ID 99 não existe.'),
+        );
 
       return request(app.getHttpServer()).delete('/users/99').expect(404);
     });

@@ -15,10 +15,7 @@ export class ChatsController {
 
   @Post()
   @ApiOperation({ summary: 'Criar ou obter um chat entre dois utilizadores' })
-  create(
-    @CurrentUser() user: ActiveUserInterface,
-    @Body() dto: CreateChatDto,
-  ) {
+  create(@CurrentUser() user: ActiveUserInterface, @Body() dto: CreateChatDto) {
     return this.chatsService.create(user.userId, dto);
   }
 }

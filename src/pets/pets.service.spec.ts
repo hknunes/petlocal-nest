@@ -135,7 +135,9 @@ describe('PetsService', () => {
     const updateDto: UpdatePetDto = { name: 'Max' };
 
     it('should call prisma.pet.update with the correct id and data', async () => {
-      jest.spyOn(prisma.pet, 'update').mockResolvedValue({ id: 1, name: 'Max' } as any);
+      jest
+        .spyOn(prisma.pet, 'update')
+        .mockResolvedValue({ id: 1, name: 'Max' } as any);
 
       await service.update(1, updateDto);
 
@@ -163,7 +165,9 @@ describe('PetsService', () => {
     it('should throw NotFoundException when the pet does not exist or does not belong to the owner', async () => {
       jest.spyOn(prisma.pet, 'findFirst').mockResolvedValue(null);
 
-      await expect(service.delete(petId, ownerId)).rejects.toThrow(NotFoundException);
+      await expect(service.delete(petId, ownerId)).rejects.toThrow(
+        NotFoundException,
+      );
       expect(prisma.pet.delete).not.toHaveBeenCalled();
     });
 

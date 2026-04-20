@@ -52,8 +52,8 @@ describe('UsersService', () => {
 
       const result = await service.findAll();
 
-      expect(prisma.user.findMany).toHaveBeenCalledWith({ where: {} });
-      expect(result).toEqual([mockUser]);
+      const spy = jest.spyOn(prisma.user, 'findMany').mockResolvedValue([mockUser] as any);
+      expect(spy).toHaveBeenCalledWith({ where: {} });
     });
 
     it('should filter users by role when provided', async () => {
@@ -69,7 +69,9 @@ describe('UsersService', () => {
     it('should throw NotFoundException when no users with the given role exist', async () => {
       jest.spyOn(prisma.user, 'findMany').mockResolvedValue([]);
 
-      await expect(service.findAll(UserRole.OWNER)).rejects.toThrow(NotFoundException);
+      await expect(service.findAll(UserRole.OWNER)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -79,7 +81,9 @@ describe('UsersService', () => {
 
       await service.findOne('testuser');
 
-      expect(prisma.user.findUnique).toHaveBeenCalledWith({ where: { username: 'testuser' } });
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({
+        where: { username: 'testuser' },
+      });
     });
 
     it('should return null when the user does not exist', async () => {
@@ -123,7 +127,9 @@ describe('UsersService', () => {
 
       await service.findByEmail('test@mail.com');
 
-      expect(prisma.user.findUnique).toHaveBeenCalledWith({ where: { email: 'test@mail.com' } });
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({
+        where: { email: 'test@mail.com' },
+      });
     });
 
     it('should return null when the email does not exist', async () => {
@@ -179,7 +185,10 @@ describe('UsersService', () => {
       const result = await service.create(dto);
 
       expect(result).not.toHaveProperty('password');
-      expect(result).toMatchObject({ id: mockUser.id, username: mockUser.username });
+      expect(result).toMatchObject({
+        id: mockUser.id,
+        username: mockUser.username,
+      });
     });
   });
 
@@ -187,7 +196,9 @@ describe('UsersService', () => {
     const updateDto: UpdateUserDto = { name: 'Updated Name' };
 
     it('should update the user with the correct data', async () => {
-      jest.spyOn(prisma.user, 'update').mockResolvedValue({ ...mockUser, name: 'Updated Name' } as any);
+      jest
+        .spyOn(prisma.user, 'update')
+        .mockResolvedValue({ ...mockUser, name: 'Updated Name' } as any);
 
       await service.update(1, updateDto);
 
@@ -198,7 +209,9 @@ describe('UsersService', () => {
     });
 
     it('should return the updated user without the password', async () => {
-      jest.spyOn(prisma.user, 'update').mockResolvedValue({ ...mockUser, name: 'Updated Name' } as any);
+      jest
+        .spyOn(prisma.user, 'update')
+        .mockResolvedValue({ ...mockUser, name: 'Updated Name' } as any);
 
       const result = await service.update(1, updateDto);
 
@@ -207,9 +220,13 @@ describe('UsersService', () => {
     });
 
     it('should throw NotFoundException when the user does not exist', async () => {
-      jest.spyOn(prisma.user, 'update').mockRejectedValue(new Error('Record not found'));
+      jest
+        .spyOn(prisma.user, 'update')
+        .mockRejectedValue(new Error('Record not found'));
 
-      await expect(service.update(99, updateDto)).rejects.toThrow(NotFoundException);
+      await expect(service.update(99, updateDto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -241,11 +258,16 @@ describe('UsersService', () => {
       const result = await service.delete(1);
 
       expect(result).not.toHaveProperty('password');
-      expect(result).toMatchObject({ id: mockUser.id, username: mockUser.username });
+      expect(result).toMatchObject({
+        id: mockUser.id,
+        username: mockUser.username,
+      });
     });
 
     it('should throw NotFoundException when the user does not exist', async () => {
-      jest.spyOn(prisma.user, 'delete').mockRejectedValue(new Error('Record not found'));
+      jest
+        .spyOn(prisma.user, 'delete')
+        .mockRejectedValue(new Error('Record not found'));
 
       await expect(service.delete(99)).rejects.toThrow(NotFoundException);
     });

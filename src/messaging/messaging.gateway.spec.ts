@@ -1,12 +1,22 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
-import { UnauthorizedException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  UnauthorizedException,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { MessagingGateway } from './messaging.gateway';
 import { ChatsService } from '../chats/chats.service';
 import { MessagesService } from '../messages/messages.service';
 
 const mockChat = { id: 1, senderId: 1, receiverId: 2, messages: [] };
-const mockMessage = { id: 10, senderId: 1, receiverId: 2, chatId: 1, message: 'Olá!' };
+const mockMessage = {
+  id: 10,
+  senderId: 1,
+  receiverId: 2,
+  chatId: 1,
+  message: 'Olá!',
+};
 
 function createSocket(overrides: Partial<any> = {}): any {
   return {
@@ -54,7 +64,9 @@ describe('MessagingGateway', () => {
     chatsService = module.get<ChatsService>(ChatsService);
     messagesService = module.get<MessagesService>(MessagesService);
 
-    gateway.server = { to: jest.fn().mockReturnValue({ emit: jest.fn() }) } as any;
+    gateway.server = {
+      to: jest.fn().mockReturnValue({ emit: jest.fn() }),
+    } as any;
   });
 
   it('should be defined', () => {
@@ -64,7 +76,9 @@ describe('MessagingGateway', () => {
   describe('handleConnection', () => {
     it('should attach userId and username to socket when token is valid', async () => {
       const socket = createSocket({ userId: undefined, username: undefined });
-      jest.spyOn(jwtService, 'verifyAsync').mockResolvedValue({ sub: 1, username: 'testuser' });
+      jest
+        .spyOn(jwtService, 'verifyAsync')
+        .mockResolvedValue({ sub: 1, username: 'testuser' });
 
       await gateway.handleConnection(socket);
 
@@ -76,13 +90,21 @@ describe('MessagingGateway', () => {
     it('should read token from Authorization header when auth.token is absent', async () => {
       const socket = createSocket({
         userId: undefined,
-        handshake: { auth: {}, headers: { authorization: 'Bearer header_token' } },
+        handshake: {
+          auth: {},
+          headers: { authorization: 'Bearer header_token' },
+        },
       });
-      jest.spyOn(jwtService, 'verifyAsync').mockResolvedValue({ sub: 2, username: 'other' });
+      jest
+        .spyOn(jwtService, 'verifyAsync')
+        .mockResolvedValue({ sub: 2, username: 'other' });
 
       await gateway.handleConnection(socket);
 
-      expect(jwtService.verifyAsync).toHaveBeenCalledWith('header_token', expect.any(Object));
+      expect(jwtService.verifyAsync).toHaveBeenCalledWith(
+        'header_token',
+        expect.any(Object),
+      );
       expect(socket.userId).toBe(2);
     });
 
@@ -98,7 +120,9 @@ describe('MessagingGateway', () => {
 
     it('should disconnect the socket when the token is invalid', async () => {
       const socket = createSocket();
-      jest.spyOn(jwtService, 'verifyAsync').mockRejectedValue(new Error('invalid token'));
+      jest
+        .spyOn(jwtService, 'verifyAsync')
+        .mockRejectedValue(new Error('invalid token'));
 
       await gateway.handleConnection(socket);
 
@@ -139,23 +163,34 @@ describe('MessagingGateway', () => {
 
       await gateway.handleJoinChat(socket, { chatId: 1 });
 
-      expect(socket.emit).toHaveBeenCalledWith('error', expect.objectContaining({ message: expect.any(String) }));
+      expect(socket.emit).toHaveBeenCalledWith(
+        'error',
+        expect.objectContaining({ message: expect.any(String) }),
+      );
       expect(socket.join).not.toHaveBeenCalled();
     });
 
     it('should propagate NotFoundException when the chat does not exist', async () => {
-      jest.spyOn(chatsService, 'findOne').mockRejectedValue(new NotFoundException());
+      jest
+        .spyOn(chatsService, 'findOne')
+        .mockRejectedValue(new NotFoundException());
       const socket = createSocket();
 
-      await expect(gateway.handleJoinChat(socket, { chatId: 99 })).rejects.toThrow(NotFoundException);
+      await expect(
+        gateway.handleJoinChat(socket, { chatId: 99 }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('handleSendMessage', () => {
     it('should persist the message and broadcast to the chat room', async () => {
-      jest.spyOn(messagesService, 'create').mockResolvedValue(mockMessage as any);
+      jest
+        .spyOn(messagesService, 'create')
+        .mockResolvedValue(mockMessage as any);
       const roomEmit = jest.fn();
-      gateway.server = { to: jest.fn().mockReturnValue({ emit: roomEmit }) } as any;
+      gateway.server = {
+        to: jest.fn().mockReturnValue({ emit: roomEmit }),
+      } as any;
       const socket = createSocket();
 
       await gateway.handleSendMessage(socket, {
@@ -180,7 +215,9 @@ describe('MessagingGateway', () => {
       const updated = { ...mockMessage, message: 'Editado!' };
       jest.spyOn(messagesService, 'update').mockResolvedValue(updated as any);
       const roomEmit = jest.fn();
-      gateway.server = { to: jest.fn().mockReturnValue({ emit: roomEmit }) } as any;
+      gateway.server = {
+        to: jest.fn().mockReturnValue({ emit: roomEmit }),
+      } as any;
       const socket = createSocket();
 
       await gateway.handleUpdateMessage(socket, {
@@ -189,37 +226,53 @@ describe('MessagingGateway', () => {
         message: 'Editado!',
       });
 
-      expect(messagesService.update).toHaveBeenCalledWith(10, socket.userId, { message: 'Editado!' });
+      expect(messagesService.update).toHaveBeenCalledWith(10, socket.userId, {
+        message: 'Editado!',
+      });
       expect(gateway.server.to).toHaveBeenCalledWith('chat:1');
       expect(roomEmit).toHaveBeenCalledWith('message_updated', updated);
     });
 
     it('should propagate ForbiddenException when the user is not the sender', async () => {
-      jest.spyOn(messagesService, 'update').mockRejectedValue(new ForbiddenException());
+      jest
+        .spyOn(messagesService, 'update')
+        .mockRejectedValue(new ForbiddenException());
       const socket = createSocket({ userId: 99 });
 
       await expect(
-        gateway.handleUpdateMessage(socket, { messageId: 10, chatId: 1, message: 'x' }),
+        gateway.handleUpdateMessage(socket, {
+          messageId: 10,
+          chatId: 1,
+          message: 'x',
+        }),
       ).rejects.toThrow(ForbiddenException);
     });
   });
 
   describe('handleDeleteMessage', () => {
     it('should delete the message and broadcast to the chat room', async () => {
-      jest.spyOn(messagesService, 'delete').mockResolvedValue(mockMessage as any);
+      jest
+        .spyOn(messagesService, 'delete')
+        .mockResolvedValue(mockMessage as any);
       const roomEmit = jest.fn();
-      gateway.server = { to: jest.fn().mockReturnValue({ emit: roomEmit }) } as any;
+      gateway.server = {
+        to: jest.fn().mockReturnValue({ emit: roomEmit }),
+      } as any;
       const socket = createSocket();
 
       await gateway.handleDeleteMessage(socket, { messageId: 10, chatId: 1 });
 
       expect(messagesService.delete).toHaveBeenCalledWith(10, socket.userId);
       expect(gateway.server.to).toHaveBeenCalledWith('chat:1');
-      expect(roomEmit).toHaveBeenCalledWith('message_deleted', { messageId: 10 });
+      expect(roomEmit).toHaveBeenCalledWith('message_deleted', {
+        messageId: 10,
+      });
     });
 
     it('should propagate ForbiddenException when the user is not the sender', async () => {
-      jest.spyOn(messagesService, 'delete').mockRejectedValue(new ForbiddenException());
+      jest
+        .spyOn(messagesService, 'delete')
+        .mockRejectedValue(new ForbiddenException());
       const socket = createSocket({ userId: 99 });
 
       await expect(
