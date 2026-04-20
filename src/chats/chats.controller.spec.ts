@@ -19,7 +19,7 @@ const mockUser = {
 
 class MockJwtGuard extends AuthGuard('jwt') {
   canActivate(context: ExecutionContext) {
-    const req = context.switchToHttp().getRequest();
+    const req = context.switchToHttp().getRequest<{ user: typeof mockUser }>();
     req.user = mockUser;
     return true;
   }
@@ -74,14 +74,16 @@ describe('ChatsController (integration)', () => {
 
     it('should call chatsService.create with the authenticated userId and receiverId', async () => {
       const mockChat = { id: 1, senderId: mockUser.userId, receiverId: 2 };
-      jest.spyOn(chatsService, 'create').mockResolvedValue(mockChat as any);
+      const createSpy = jest
+        .spyOn(chatsService, 'create')
+        .mockResolvedValue(mockChat as any);
 
       await request(app.getHttpServer())
         .post('/chats')
         .send({ receiverId: 2 })
         .expect(201);
 
-      expect(chatsService.create).toHaveBeenCalledWith(mockUser.userId, {
+      expect(createSpy).toHaveBeenCalledWith(mockUser.userId, {
         receiverId: 2,
       });
     });
@@ -110,7 +112,7 @@ describe('ChatsController (integration)', () => {
         .send({ receiverId: mockUser.userId })
         .expect(400);
 
-      expect(response.body.message).toBe(
+      expect((response.body as { message: string }).message).toBe(
         'Não pode criar um chat consigo mesmo.',
       );
     });

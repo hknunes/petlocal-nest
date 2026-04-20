@@ -19,7 +19,7 @@ const mockUser = {
 
 class MockJwtGuard extends AuthGuard('jwt') {
   canActivate(context: ExecutionContext) {
-    const req = context.switchToHttp().getRequest();
+    const req = context.switchToHttp().getRequest<{ user: typeof mockUser }>();
     req.user = mockUser;
     return true;
   }
@@ -90,14 +90,16 @@ describe('PetsController (integration)', () => {
     });
 
     it('should call petsService.create with the dto and authenticated userId', async () => {
-      jest.spyOn(petsService, 'create').mockResolvedValue({ id: 1 } as any);
+      const createSpy = jest
+        .spyOn(petsService, 'create')
+        .mockResolvedValue({ id: 1 } as any);
 
       await request(app.getHttpServer())
         .post('/pets')
         .send(validDto)
         .expect(201);
 
-      expect(petsService.create).toHaveBeenCalledWith(
+      expect(createSpy).toHaveBeenCalledWith(
         expect.objectContaining({ name: validDto.name }),
         mockUser.userId,
       );
@@ -118,19 +120,23 @@ describe('PetsController (integration)', () => {
 
   describe('GET /pets', () => {
     it('should call petsService.findAll without ownerId when no query param is provided', async () => {
-      jest.spyOn(petsService, 'findAll').mockResolvedValue([]);
+      const findAllSpy = jest
+        .spyOn(petsService, 'findAll')
+        .mockResolvedValue([]);
 
       await request(app.getHttpServer()).get('/pets').expect(200);
 
-      expect(petsService.findAll).toHaveBeenCalledWith(undefined);
+      expect(findAllSpy).toHaveBeenCalledWith(undefined);
     });
 
     it('should call petsService.findAll with the parsed ownerId query param', async () => {
-      jest.spyOn(petsService, 'findAll').mockResolvedValue([]);
+      const findAllSpy = jest
+        .spyOn(petsService, 'findAll')
+        .mockResolvedValue([]);
 
       await request(app.getHttpServer()).get('/pets?ownerId=1').expect(200);
 
-      expect(petsService.findAll).toHaveBeenCalledWith(1);
+      expect(findAllSpy).toHaveBeenCalledWith(1);
     });
 
     it('should return 400 when ownerId is not a number', async () => {

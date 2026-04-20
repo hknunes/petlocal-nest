@@ -18,7 +18,7 @@ const mockUser = {
 
 class MockJwtGuard extends AuthGuard('jwt') {
   canActivate(context: ExecutionContext) {
-    const req = context.switchToHttp().getRequest();
+    const req = context.switchToHttp().getRequest<{ user: typeof mockUser }>();
     req.user = mockUser;
     return true;
   }
@@ -89,14 +89,16 @@ describe('MessagesController (integration)', () => {
     });
 
     it('should call messagesService.create with the dto', async () => {
-      jest.spyOn(messagesService, 'create').mockResolvedValue({ id: 1 } as any);
+      const createSpy = jest
+        .spyOn(messagesService, 'create')
+        .mockResolvedValue({ id: 1 } as any);
 
       await request(app.getHttpServer())
         .post('/messages')
         .send(validDto)
         .expect(201);
 
-      expect(messagesService.create).toHaveBeenCalledWith(validDto);
+      expect(createSpy).toHaveBeenCalledWith(validDto);
     });
 
     it('should return 201 with the created message', async () => {

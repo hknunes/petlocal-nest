@@ -40,11 +40,11 @@ describe('SittersController', () => {
         animalType: PetType.DOG,
         serviceType: ServiceType.HOME_VISIT,
       };
-      jest.spyOn(service, 'findAll').mockResolvedValue([]);
+      const findAllSpy = jest.spyOn(service, 'findAll').mockResolvedValue([]);
 
       await controller.findAll(filters);
 
-      expect(service.findAll).toHaveBeenCalledWith(filters);
+      expect(findAllSpy).toHaveBeenCalledWith(filters);
     });
 
     it('should return the list of sitters returned by the service', async () => {
@@ -68,11 +68,11 @@ describe('SittersController', () => {
     });
 
     it('should work with no filters', async () => {
-      jest.spyOn(service, 'findAll').mockResolvedValue([]);
+      const findAllSpy = jest.spyOn(service, 'findAll').mockResolvedValue([]);
 
       await controller.findAll({});
 
-      expect(service.findAll).toHaveBeenCalledWith({});
+      expect(findAllSpy).toHaveBeenCalledWith({});
     });
 
     it('should return an empty array when no sitters match', async () => {

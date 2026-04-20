@@ -55,18 +55,18 @@ describe('SittersService', () => {
 
     it('should upsert the profile without availability when not provided', async () => {
       const mockProfile = { id: 1, userId, ...baseDto };
-      jest
+      const upsertSpy = jest
         .spyOn(prisma.sitterProfile, 'upsert')
         .mockResolvedValue(mockProfile as any);
 
       const result = await service.updateSitterProfile(userId, baseDto);
 
-      expect(prisma.sitterProfile.upsert).toHaveBeenCalledWith({
+      expect(upsertSpy).toHaveBeenCalledWith({
         where: { userId },
         update: expect.not.objectContaining({
-          availability: expect.anything(),
-        }),
-        create: expect.objectContaining({ userId }),
+          availability: expect.anything() as object,
+        }) as object,
+        create: expect.objectContaining({ userId }) as object,
       });
       expect(result).toEqual(mockProfile);
     });
@@ -76,15 +76,21 @@ describe('SittersService', () => {
         ...baseDto,
         availability: [DayOfWeek.Monday, DayOfWeek.Wednesday],
       };
-      jest.spyOn(prisma.sitterProfile, 'upsert').mockResolvedValue({} as any);
+      const upsertSpy = jest
+        .spyOn(prisma.sitterProfile, 'upsert')
+        .mockResolvedValue({} as any);
 
       await service.updateSitterProfile(userId, dto);
 
       const expectedMask = DayOfWeek.Monday | DayOfWeek.Wednesday; // 5
-      expect(prisma.sitterProfile.upsert).toHaveBeenCalledWith(
+      expect(upsertSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          update: expect.objectContaining({ availability: expectedMask }),
-          create: expect.objectContaining({ availability: expectedMask }),
+          update: expect.objectContaining({
+            availability: expectedMask,
+          }) as object,
+          create: expect.objectContaining({
+            availability: expectedMask,
+          }) as object,
         }),
       );
     });
@@ -97,13 +103,13 @@ describe('SittersService', () => {
         userId: 1,
         user: { username: 'john', email: 'john@example.com' },
       };
-      jest
+      const findUniqueSpy = jest
         .spyOn(prisma.sitterProfile, 'findUnique')
         .mockResolvedValue(mockProfile as any);
 
       const result = await service.getSitterProfile(1);
 
-      expect(prisma.sitterProfile.findUnique).toHaveBeenCalledWith({
+      expect(findUniqueSpy).toHaveBeenCalledWith({
         where: { userId: 1 },
         include: { user: { select: { username: true, email: true } } },
       });
@@ -132,7 +138,7 @@ describe('SittersService', () => {
       };
       jest
         .spyOn(prisma, '$transaction')
-        .mockImplementation((cb: any) => cb(tx));
+        .mockImplementation((cb: (tx: typeof tx) => unknown) => cb(tx));
 
       await expect(service.deleteSitterProfile(userId)).rejects.toThrow(
         NotFoundException,
@@ -152,7 +158,7 @@ describe('SittersService', () => {
       };
       jest
         .spyOn(prisma, '$transaction')
-        .mockImplementation((cb: any) => cb(tx));
+        .mockImplementation((cb: (tx: typeof tx) => unknown) => cb(tx));
 
       const result = await service.deleteSitterProfile(userId);
 
@@ -180,57 +186,67 @@ describe('SittersService', () => {
     });
 
     it('should apply location filter', async () => {
-      jest.spyOn(prisma.sitterProfile, 'findMany').mockResolvedValue([]);
+      const findManySpy = jest
+        .spyOn(prisma.sitterProfile, 'findMany')
+        .mockResolvedValue([]);
 
       await service.findAll({ location: 'Lisboa' } as GetSittersFilterDto);
 
-      expect(prisma.sitterProfile.findMany).toHaveBeenCalledWith(
+      expect(findManySpy).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             user: { location: { contains: 'Lisboa', mode: 'insensitive' } },
-          }),
+          }) as object,
         }),
       );
     });
 
     it('should apply maxPrice filter', async () => {
-      jest.spyOn(prisma.sitterProfile, 'findMany').mockResolvedValue([]);
+      const findManySpy = jest
+        .spyOn(prisma.sitterProfile, 'findMany')
+        .mockResolvedValue([]);
 
       await service.findAll({ maxPrice: 30 } as GetSittersFilterDto);
 
-      expect(prisma.sitterProfile.findMany).toHaveBeenCalledWith(
+      expect(findManySpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({ pricePerHour: { lte: 30 } }),
+          where: expect.objectContaining({
+            pricePerHour: { lte: 30 },
+          }) as object,
         }),
       );
     });
 
     it('should apply animalType filter', async () => {
-      jest.spyOn(prisma.sitterProfile, 'findMany').mockResolvedValue([]);
+      const findManySpy = jest
+        .spyOn(prisma.sitterProfile, 'findMany')
+        .mockResolvedValue([]);
 
       await service.findAll({ animalType: PetType.CAT } as GetSittersFilterDto);
 
-      expect(prisma.sitterProfile.findMany).toHaveBeenCalledWith(
+      expect(findManySpy).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             acceptedAnimals: { has: PetType.CAT },
-          }),
+          }) as object,
         }),
       );
     });
 
     it('should apply serviceType filter', async () => {
-      jest.spyOn(prisma.sitterProfile, 'findMany').mockResolvedValue([]);
+      const findManySpy = jest
+        .spyOn(prisma.sitterProfile, 'findMany')
+        .mockResolvedValue([]);
 
       await service.findAll({
         serviceType: ServiceType.ACCOMODATION,
       } as GetSittersFilterDto);
 
-      expect(prisma.sitterProfile.findMany).toHaveBeenCalledWith(
+      expect(findManySpy).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             services: { has: ServiceType.ACCOMODATION },
-          }),
+          }) as object,
         }),
       );
     });

@@ -57,21 +57,25 @@ describe('UsersController (integration)', () => {
 
   describe('GET /users', () => {
     it('should call findAll without a role when no query param is provided', async () => {
-      jest.spyOn(usersService, 'findAll').mockResolvedValue([]);
+      const findAllSpy = jest
+        .spyOn(usersService, 'findAll')
+        .mockResolvedValue([]);
 
       await request(app.getHttpServer()).get('/users').expect(200);
 
-      expect(usersService.findAll).toHaveBeenCalledWith(undefined);
+      expect(findAllSpy).toHaveBeenCalledWith(undefined);
     });
 
     it('should call findAll with the role query param', async () => {
-      jest.spyOn(usersService, 'findAll').mockResolvedValue([mockUser] as any);
+      const findAllSpy = jest
+        .spyOn(usersService, 'findAll')
+        .mockResolvedValue([mockUser] as any);
 
       await request(app.getHttpServer())
         .get(`/users?role=${UserRole.OWNER}`)
         .expect(200);
 
-      expect(usersService.findAll).toHaveBeenCalledWith(UserRole.OWNER);
+      expect(findAllSpy).toHaveBeenCalledWith(UserRole.OWNER);
     });
 
     it('should return 200 with the list of users', async () => {
@@ -105,13 +109,13 @@ describe('UsersController (integration)', () => {
     });
 
     it('should call findOneById with the parsed id', async () => {
-      jest
+      const findOneByIdSpy = jest
         .spyOn(usersService, 'findOneById')
         .mockResolvedValue(mockUser as any);
 
       await request(app.getHttpServer()).get('/users/1').expect(200);
 
-      expect(usersService.findOneById).toHaveBeenCalledWith(1);
+      expect(findOneByIdSpy).toHaveBeenCalledWith(1);
     });
 
     it('should return 200 with the user', async () => {
@@ -163,14 +167,16 @@ describe('UsersController (integration)', () => {
     });
 
     it('should call usersService.create with the dto', async () => {
-      jest.spyOn(usersService, 'create').mockResolvedValue(mockUser as any);
+      const createSpy = jest
+        .spyOn(usersService, 'create')
+        .mockResolvedValue(mockUser as any);
 
       await request(app.getHttpServer())
         .post('/users')
         .send(validDto)
         .expect(201);
 
-      expect(usersService.create).toHaveBeenCalledWith(
+      expect(createSpy).toHaveBeenCalledWith(
         expect.objectContaining({ username: validDto.username }),
       );
     });
@@ -196,14 +202,16 @@ describe('UsersController (integration)', () => {
     });
 
     it('should call usersService.update with the parsed id and dto', async () => {
-      jest.spyOn(usersService, 'update').mockResolvedValue(mockUser as any);
+      const updateSpy = jest
+        .spyOn(usersService, 'update')
+        .mockResolvedValue(mockUser as any);
 
       await request(app.getHttpServer())
         .patch('/users/1')
         .send({ name: 'New Name' })
         .expect(200);
 
-      expect(usersService.update).toHaveBeenCalledWith(
+      expect(updateSpy).toHaveBeenCalledWith(
         1,
         expect.objectContaining({ name: 'New Name' }),
       );
@@ -241,11 +249,13 @@ describe('UsersController (integration)', () => {
     });
 
     it('should call usersService.delete with the parsed id', async () => {
-      jest.spyOn(usersService, 'delete').mockResolvedValue(mockUser as any);
+      const deleteSpy = jest
+        .spyOn(usersService, 'delete')
+        .mockResolvedValue(mockUser as any);
 
       await request(app.getHttpServer()).delete('/users/1').expect(200);
 
-      expect(usersService.delete).toHaveBeenCalledWith(1);
+      expect(deleteSpy).toHaveBeenCalledWith(1);
     });
 
     it('should return 200 with the deleted user', async () => {

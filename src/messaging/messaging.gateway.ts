@@ -34,13 +34,17 @@ export class MessagingGateway
 
   async handleConnection(socket: AuthenticatedSocket) {
     try {
+      const auth = socket.handshake.auth as { token?: string };
       const token =
-        socket.handshake.auth?.token ||
+        auth.token ||
         socket.handshake.headers?.authorization?.replace('Bearer ', '');
 
       if (!token) throw new UnauthorizedException();
 
-      const payload = await this.jwtService.verifyAsync(token, {
+      const payload = await this.jwtService.verifyAsync<{
+        sub: number;
+        username: string;
+      }>(token, {
         secret: jwtConstants.secret,
       });
 

@@ -37,7 +37,7 @@ export class AuthController {
   @ApiBearerAuth()
   @UseGuards(AuthGuard('jwt'))
   @Get('profile')
-  getProfile(@Request() req) {
+  getProfile(@Request() req: { user: Record<string, unknown> }) {
     console.log('Utilizador no Request:', req.user);
     return req.user;
   }

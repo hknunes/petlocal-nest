@@ -21,7 +21,7 @@ const mockUser = {
 
 class MockJwtGuard extends AuthGuard('jwt') {
   canActivate(context: ExecutionContext) {
-    const req = context.switchToHttp().getRequest();
+    const req = context.switchToHttp().getRequest<{ user: typeof mockUser }>();
     req.user = mockUser;
     return true;
   }
@@ -116,7 +116,9 @@ describe('AuthController (integration)', () => {
         .send(validDto)
         .expect(409);
 
-      expect(response.body.message).toBe('Este username já está em utilização');
+      expect((response.body as { message: string }).message).toBe(
+        'Este username já está em utilização',
+      );
     });
 
     it('should return 201 with access_token on successful registration', async () => {
@@ -162,11 +164,13 @@ describe('AuthController (integration)', () => {
         .send(validDto)
         .expect(401);
 
-      expect(response.body.message).toBe('Credenciais inválidas');
+      expect((response.body as { message: string }).message).toBe(
+        'Credenciais inválidas',
+      );
     });
 
     it('should call authService.login with username and password', async () => {
-      jest
+      const loginSpy = jest
         .spyOn(authService, 'login')
         .mockResolvedValue({ access_token: 'mock_token' });
 
@@ -175,7 +179,7 @@ describe('AuthController (integration)', () => {
         .send(validDto)
         .expect(200);
 
-      expect(authService.login).toHaveBeenCalledWith(
+      expect(loginSpy).toHaveBeenCalledWith(
         validDto.username,
         validDto.password,
       );
@@ -235,7 +239,7 @@ describe('AuthController (integration)', () => {
     });
 
     it('should call authService.forgotPassword with the email', async () => {
-      jest
+      const forgotPasswordSpy = jest
         .spyOn(authService, 'forgotPassword')
         .mockResolvedValue({ message: 'ok' });
 
@@ -243,7 +247,7 @@ describe('AuthController (integration)', () => {
         .post('/auth/forgot-password')
         .send({ email: 'test@mail.com' });
 
-      expect(authService.forgotPassword).toHaveBeenCalledWith('test@mail.com');
+      expect(forgotPasswordSpy).toHaveBeenCalledWith('test@mail.com');
     });
   });
 
@@ -275,11 +279,13 @@ describe('AuthController (integration)', () => {
         .send({ newPassword: 'newpass123' })
         .expect(401);
 
-      expect(response.body.message).toBe('Token inválido');
+      expect((response.body as { message: string }).message).toBe(
+        'Token inválido',
+      );
     });
 
     it('should call authService.resetPassword with token and newPassword', async () => {
-      jest
+      const resetPasswordSpy = jest
         .spyOn(authService, 'resetPassword')
         .mockResolvedValue({ message: 'ok' });
 
@@ -288,7 +294,7 @@ describe('AuthController (integration)', () => {
         .query({ token: 'valid_token' })
         .send({ newPassword: 'newpass123' });
 
-      expect(authService.resetPassword).toHaveBeenCalledWith(
+      expect(resetPasswordSpy).toHaveBeenCalledWith(
         'valid_token',
         'newpass123',
       );

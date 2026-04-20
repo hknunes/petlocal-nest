@@ -47,21 +47,23 @@ describe('BookingsService', () => {
 
     it('should throw BadRequestException when the pet does not belong to the owner', async () => {
       jest.spyOn(prisma.pet, 'findFirst').mockResolvedValue(null);
+      const findUniqueSpy = jest.spyOn(prisma.sitterProfile, 'findUnique');
 
       await expect(service.create(ownerId, dto)).rejects.toThrow(
         BadRequestException,
       );
-      expect(prisma.sitterProfile.findUnique).not.toHaveBeenCalled();
+      expect(findUniqueSpy).not.toHaveBeenCalled();
     });
 
     it('should throw NotFoundException when the sitter profile does not exist', async () => {
       jest.spyOn(prisma.pet, 'findFirst').mockResolvedValue({ id: 10 } as any);
       jest.spyOn(prisma.sitterProfile, 'findUnique').mockResolvedValue(null);
+      const createSpy = jest.spyOn(prisma.booking, 'create');
 
       await expect(service.create(ownerId, dto)).rejects.toThrow(
         NotFoundException,
       );
-      expect(prisma.booking.create).not.toHaveBeenCalled();
+      expect(createSpy).not.toHaveBeenCalled();
     });
 
     it('should create a booking with the correct number of days as totalPrice', async () => {
@@ -69,11 +71,13 @@ describe('BookingsService', () => {
       jest
         .spyOn(prisma.sitterProfile, 'findUnique')
         .mockResolvedValue({ id: 5, pricePerHour: 15 } as any);
-      jest.spyOn(prisma.booking, 'create').mockResolvedValue({ id: 1 } as any);
+      const createSpy = jest
+        .spyOn(prisma.booking, 'create')
+        .mockResolvedValue({ id: 1 } as any);
 
       await service.create(ownerId, dto);
 
-      expect(prisma.booking.create).toHaveBeenCalledWith(
+      expect(createSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
             totalPrice: 2, // 2 days between May 1 and May 3
@@ -81,7 +85,7 @@ describe('BookingsService', () => {
             petId: dto.petId,
             sitterProfileId: dto.sitterProfileId,
             status: 'PENDING',
-          }),
+          }) as object,
         }),
       );
     });
@@ -96,13 +100,15 @@ describe('BookingsService', () => {
       jest
         .spyOn(prisma.sitterProfile, 'findUnique')
         .mockResolvedValue({ id: 5 } as any);
-      jest.spyOn(prisma.booking, 'create').mockResolvedValue({ id: 1 } as any);
+      const createSpy = jest
+        .spyOn(prisma.booking, 'create')
+        .mockResolvedValue({ id: 1 } as any);
 
       await service.create(ownerId, sameDayDto);
 
-      expect(prisma.booking.create).toHaveBeenCalledWith(
+      expect(createSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({ totalPrice: 1 }),
+          data: expect.objectContaining({ totalPrice: 1 }) as object,
         }),
       );
     });
@@ -125,11 +131,13 @@ describe('BookingsService', () => {
 
   describe('getMyBookings', () => {
     it('should query by sitterProfile.userId when role is SITTER', async () => {
-      jest.spyOn(prisma.booking, 'findMany').mockResolvedValue([]);
+      const findManySpy = jest
+        .spyOn(prisma.booking, 'findMany')
+        .mockResolvedValue([]);
 
       await service.getMyBookings(1, 'SITTER');
 
-      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+      expect(findManySpy).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { sitterProfile: { userId: 1 } },
         }),
@@ -137,11 +145,13 @@ describe('BookingsService', () => {
     });
 
     it('should query by ownerId when role is OWNER', async () => {
-      jest.spyOn(prisma.booking, 'findMany').mockResolvedValue([]);
+      const findManySpy = jest
+        .spyOn(prisma.booking, 'findMany')
+        .mockResolvedValue([]);
 
       await service.getMyBookings(1, 'OWNER');
 
-      expect(prisma.booking.findMany).toHaveBeenCalledWith(
+      expect(findManySpy).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { ownerId: 1 },
         }),
@@ -171,11 +181,12 @@ describe('BookingsService', () => {
 
     it('should throw NotFoundException when the booking does not exist', async () => {
       jest.spyOn(prisma.booking, 'findUnique').mockResolvedValue(null);
+      const updateSpy = jest.spyOn(prisma.booking, 'update');
 
       await expect(
         service.changeStatus(bookingId, sitterId, 'COMPLETED'),
       ).rejects.toThrow(NotFoundException);
-      expect(prisma.booking.update).not.toHaveBeenCalled();
+      expect(updateSpy).not.toHaveBeenCalled();
     });
 
     it('should throw BadRequestException when the sitter does not own the booking', async () => {
@@ -183,35 +194,37 @@ describe('BookingsService', () => {
         ...mockBooking,
         sitterProfile: { userId: 99 }, // different sitter
       } as any);
+      const updateSpy = jest.spyOn(prisma.booking, 'update');
 
       await expect(
         service.changeStatus(bookingId, sitterId, 'COMPLETED'),
       ).rejects.toThrow(BadRequestException);
-      expect(prisma.booking.update).not.toHaveBeenCalled();
+      expect(updateSpy).not.toHaveBeenCalled();
     });
 
     it('should throw BadRequestException when the status is invalid', async () => {
       jest
         .spyOn(prisma.booking, 'findUnique')
         .mockResolvedValue(mockBooking as any);
+      const updateSpy = jest.spyOn(prisma.booking, 'update');
 
       await expect(
         service.changeStatus(bookingId, sitterId, 'ACCEPTED' as any),
       ).rejects.toThrow(BadRequestException);
-      expect(prisma.booking.update).not.toHaveBeenCalled();
+      expect(updateSpy).not.toHaveBeenCalled();
     });
 
     it('should update the booking with the new status', async () => {
       jest
         .spyOn(prisma.booking, 'findUnique')
         .mockResolvedValue(mockBooking as any);
-      jest
+      const updateSpy = jest
         .spyOn(prisma.booking, 'update')
         .mockResolvedValue({ ...mockBooking, status: 'CONFIRMED' } as any);
 
       await service.changeStatus(bookingId, sitterId, 'CONFIRMED' as any);
 
-      expect(prisma.booking.update).toHaveBeenCalledWith({
+      expect(updateSpy).toHaveBeenCalledWith({
         where: { id: bookingId },
         data: { status: 'CONFIRMED' },
       });

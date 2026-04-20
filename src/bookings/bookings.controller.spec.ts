@@ -29,7 +29,9 @@ let activeUser = mockOwner;
 
 class MockJwtGuard extends AuthGuard('jwt') {
   canActivate(context: ExecutionContext) {
-    const req = context.switchToHttp().getRequest();
+    const req = context
+      .switchToHttp()
+      .getRequest<{ user: typeof activeUser }>();
     req.user = activeUser;
     return true;
   }
@@ -106,17 +108,16 @@ describe('BookingsController (integration)', () => {
     });
 
     it('should call bookingsService.create with the authenticated userId and dto', async () => {
-      jest.spyOn(bookingsService, 'create').mockResolvedValue({ id: 1 } as any);
+      const createSpy = jest
+        .spyOn(bookingsService, 'create')
+        .mockResolvedValue({ id: 1 } as any);
 
       await request(app.getHttpServer())
         .post('/bookings')
         .send(validDto)
         .expect(201);
 
-      expect(bookingsService.create).toHaveBeenCalledWith(
-        mockOwner.userId,
-        validDto,
-      );
+      expect(createSpy).toHaveBeenCalledWith(mockOwner.userId, validDto);
     });
 
     it('should return 201 with the created booking', async () => {
@@ -136,27 +137,28 @@ describe('BookingsController (integration)', () => {
 
   describe('GET /bookings/my-requests', () => {
     it('should call getMyBookings with OWNER role for a user without SITTER role', async () => {
-      jest.spyOn(bookingsService, 'getMyBookings').mockResolvedValue([]);
+      const getMyBookingsSpy = jest
+        .spyOn(bookingsService, 'getMyBookings')
+        .mockResolvedValue([]);
 
       await request(app.getHttpServer())
         .get('/bookings/my-requests')
         .expect(200);
 
-      expect(bookingsService.getMyBookings).toHaveBeenCalledWith(
-        mockOwner.userId,
-        'OWNER',
-      );
+      expect(getMyBookingsSpy).toHaveBeenCalledWith(mockOwner.userId, 'OWNER');
     });
 
     it('should call getMyBookings with SITTER role for a user with SITTER role', async () => {
       activeUser = mockSitter;
-      jest.spyOn(bookingsService, 'getMyBookings').mockResolvedValue([]);
+      const getMyBookingsSpy = jest
+        .spyOn(bookingsService, 'getMyBookings')
+        .mockResolvedValue([]);
 
       await request(app.getHttpServer())
         .get('/bookings/my-requests')
         .expect(200);
 
-      expect(bookingsService.getMyBookings).toHaveBeenCalledWith(
+      expect(getMyBookingsSpy).toHaveBeenCalledWith(
         mockSitter.userId,
         'SITTER',
       );
@@ -188,7 +190,7 @@ describe('BookingsController (integration)', () => {
     });
 
     it('should call changeStatus with the bookingId, sitterId, and CONFIRMED', async () => {
-      jest
+      const changeStatusSpy = jest
         .spyOn(bookingsService, 'changeStatus')
         .mockResolvedValue({ id: 1 } as any);
 
@@ -196,7 +198,7 @@ describe('BookingsController (integration)', () => {
         .patch('/bookings/accept-booking/1')
         .expect(200);
 
-      expect(bookingsService.changeStatus).toHaveBeenCalledWith(
+      expect(changeStatusSpy).toHaveBeenCalledWith(
         1,
         mockSitter.userId,
         BookingStatus.CONFIRMED,
@@ -225,7 +227,9 @@ describe('BookingsController (integration)', () => {
         .patch('/bookings/accept-booking/999')
         .expect(404);
 
-      expect(response.body.message).toBe('Reserva não encontrada.');
+      expect((response.body as { message: string }).message).toBe(
+        'Reserva não encontrada.',
+      );
     });
   });
 
@@ -241,7 +245,7 @@ describe('BookingsController (integration)', () => {
     });
 
     it('should call changeStatus with the bookingId, sitterId, and CANCELLED', async () => {
-      jest
+      const changeStatusSpy = jest
         .spyOn(bookingsService, 'changeStatus')
         .mockResolvedValue({ id: 1 } as any);
 
@@ -249,7 +253,7 @@ describe('BookingsController (integration)', () => {
         .patch('/bookings/reject-booking/1')
         .expect(200);
 
-      expect(bookingsService.changeStatus).toHaveBeenCalledWith(
+      expect(changeStatusSpy).toHaveBeenCalledWith(
         1,
         mockSitter.userId,
         BookingStatus.CANCELLED,
@@ -282,7 +286,7 @@ describe('BookingsController (integration)', () => {
         .patch('/bookings/reject-booking/1')
         .expect(400);
 
-      expect(response.body.message).toBe(
+      expect((response.body as { message: string }).message).toBe(
         'Não tem permissão para alterar esta reserva.',
       );
     });
