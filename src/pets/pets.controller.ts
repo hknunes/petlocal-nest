@@ -6,6 +6,7 @@ import {
   Body,
   Param,
   UseGuards,
+  Delete,
   Request as ReqDecorator, // Renomeia o decorator para não colidir com o tipo
   Query,
   Request,
@@ -16,7 +17,6 @@ import { UpdatePetDto } from './dto/update-pet.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
-import { use } from 'passport';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt')) // Protege todas as rotas de pets
@@ -48,6 +48,11 @@ export class PetsController {
   @UseGuards(AuthGuard('jwt')) // Garante que só utilizadores autenticados acedem
   findMyPets(@CurrentUser() user) {
     return this.petsService.findAllByOwner(user.userId);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.petsService.remove(id);
   }
 }
 

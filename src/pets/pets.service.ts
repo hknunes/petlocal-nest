@@ -33,10 +33,25 @@ export class PetsService {
   }
 
   async findAll(ownerId?: number): Promise<PetWithOwner[]> {
+    console.log('Find all:');
+    console.log('ownerId recebido:', ownerId);
+
     return (await this.prisma.pet.findMany({
-      where: ownerId ? { ownerId: Number(ownerId) } : {},
+      where: ownerId ? { ownerId } : {},
       include: { owner: this.ownerSelect },
     })) as PetWithOwner[];
+  }
+  async findAllByOwner(ownerId: number): Promise<PetWithOwner[]> {
+    console.log('Find all by owner:');
+    console.log('ownerId recebido:', ownerId);
+    const pets = await this.prisma.pet.findMany({
+      where: { ownerId: ownerId },
+      include: { owner: this.ownerSelect },
+    });
+
+    console.log(pets);
+
+    return pets as PetWithOwner[];
   }
 
   async findOne(id: number): Promise<PetWithOwner> {
@@ -51,22 +66,19 @@ export class PetsService {
   }
 
   async update(id: number, updatePetDto: UpdatePetDto) {
-    return this.prisma.pet.update({
-      where: { id: Number(id) },
-      data: updatePetDto,
-    });
+    try {
+      return await this.prisma.pet.update({
+        where: { id },
+        data: updatePetDto,
+      });
+    } catch (e) {
+      throw new NotFoundException(`Pet ${id} não encontrado`);
+    }
   }
 
-  async delete(id: number, ownerId: number) {
-    const pet = await this.prisma.pet.findFirst({
-      where: { id: Number(id), ownerId: Number(ownerId) },
-    });
-
-    if (!pet)
-      throw new NotFoundException(
-        'Pet não encontrado ou não pertence a este utilizador',
-      );
-
-    return this.prisma.pet.delete({ where: { id: pet.id } });
+  async remove(id: string) {
+    const pet = await this.prisma.pet.findUnique({ where: { id: Number(id) } });
+    if (!pet) throw new NotFoundException('Pet não encontrado');
+    return this.prisma.pet.delete({ where: { id: Number(id) } });
   }
 }
