@@ -2,16 +2,21 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Body,
+  Param,
   UseGuards,
   Request as ReqDecorator, // Renomeia o decorator para não colidir com o tipo
-  ParseIntPipe,
   Query,
+  Request,
 } from '@nestjs/common';
 import { PetsService } from './pets.service';
 import { CreatePetDto } from './dto/create-pet.dto';
+import { UpdatePetDto } from './dto/update-pet.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { use } from 'passport';
 
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt')) // Protege todas as rotas de pets
@@ -22,19 +27,27 @@ export class PetsController {
   @Post()
   create(
     @Body() createPetDto: CreatePetDto,
-    @ReqDecorator() req: RequestWithUser,
+    @CurrentUser() user, // Usa o decorator para obter o usuário autenticado
   ) {
-    // req.user.userId vem do teu JwtStrategy (payload.sub)
-    const authenticatedUserId = req.user.userId || req.user.sub;
-    return this.petsService.create(createPetDto, Number(authenticatedUserId));
+    console.log('Authenticated User ID:', user.userId); // Verifica se o userId está presente
+    return this.petsService.create(createPetDto, Number(user.userId));
   }
 
   @Get()
   @ApiQuery({ name: 'ownerId', required: false, type: Number }) // Força o Swagger
-  findAll(
-    @Query('ownerId', new ParseIntPipe({ optional: true })) ownerId?: number,
-  ) {
+  findAll(@Query('ownerId') ownerId?: number) {
     return this.petsService.findAll(ownerId);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updatePetDto: UpdatePetDto) {
+    return this.petsService.update(Number(id), updatePetDto);
+  }
+
+  @Get('me')
+  @UseGuards(AuthGuard('jwt')) // Garante que só utilizadores autenticados acedem
+  findMyPets(@CurrentUser() user) {
+    return this.petsService.findAllByOwner(user.userId);
   }
 }
 
